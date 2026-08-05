@@ -30,16 +30,27 @@ RSpec.describe 'Integration Apps API', type: :request do
         expect(apps['action']).to be_nil
       end
 
-      it 'will not return sensitive information for openai app for agents' do
-        openai = create(:integrations_hook, :openai, account: account)
+      it 'will not return sensitive information for dyte app for agents' do
+        dyte = create(:integrations_hook, :dyte, account: account)
         get api_v1_account_integrations_apps_url(account),
             headers: agent.create_new_auth_token,
             as: :json
 
         expect(response).to have_http_status(:success)
 
-        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == openai.app.id }
+        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == dyte.app.id }
         expect(app['hooks'].first['settings']).to be_nil
+      end
+
+      it 'does not offer integrations that ask the customer for third-party AI credentials' do
+        get api_v1_account_integrations_apps_url(account),
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+
+        offered = response.parsed_body['payload'].pluck('id')
+        expect(offered).not_to include('openai', 'dialogflow', 'google_translate')
       end
 
       it 'returns all active apps with admin metadata if user is an admin' do
@@ -70,31 +81,31 @@ RSpec.describe 'Integration Apps API', type: :request do
         expect(slack_app['action']).to include('client_id=client_id')
       end
 
-      it 'returns visible hook settings for openai app for admins' do
-        openai = create(:integrations_hook, :openai, account: account)
+      it 'returns visible hook settings for dyte app for admins' do
+        dyte = create(:integrations_hook, :dyte, account: account)
         get api_v1_account_integrations_apps_url(account),
             headers: admin.create_new_auth_token,
             as: :json
 
         expect(response).to have_http_status(:success)
 
-        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == openai.app.id }
+        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == dyte.app.id }
         expect(app['hooks'].first['settings']).not_to be_nil
       end
 
-      it 'redacts secrets and only returns visible settings for openai hooks' do
-        openai = create(
+      it 'redacts secrets and only returns visible settings for dyte hooks' do
+        dyte = create(
           :integrations_hook,
-          :openai,
+          :dyte,
           account: account,
-          settings: { api_key: 'sk-secret', label_suggestion: true }
+          settings: { account_id: 'acc-1', app_id: 'app-1', api_token: 'secret-token' }
         )
         get api_v1_account_integrations_apps_url(account),
             headers: admin.create_new_auth_token,
             as: :json
 
-        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == openai.app.id }
-        expect(app['hooks'].first['settings']).to eq('label_suggestion' => true)
+        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == dyte.app.id }
+        expect(app['hooks'].first['settings']).to eq('account_id' => 'acc-1', 'app_id' => 'app-1')
       end
 
       it 'keeps slack channel display settings while redacting unspecified settings' do
