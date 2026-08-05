@@ -64,6 +64,12 @@ class Integrations::App
   def active?(account)
     return false if PATHORS_WITHHELD_APPS.include?(params[:id])
 
+    credentials_available?(account)
+  end
+
+  # Whether the instance/account has what this app needs to be usable at all —
+  # an OAuth client on the instance, a feature flag on the account, or both.
+  def credentials_available?(account)
     case params[:id]
     when 'slack'
       GlobalConfigService.load('SLACK_CLIENT_SECRET', nil).present?
