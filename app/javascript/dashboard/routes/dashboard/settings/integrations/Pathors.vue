@@ -11,6 +11,12 @@ import Label from 'dashboard/components-next/label/Label.vue';
 import ToggleSwitch from 'dashboard/components-next/switch/Switch.vue';
 
 const PATHORS_APP_URL = 'https://app.pathors.com';
+// Referenced via :src binding so the Vue compiler treats it as a runtime
+// string. A static src attribute is compiled to a module import, which the
+// test-mode Rollup build cannot resolve for public/ paths — and eslint's
+// vue/no-useless-v-bind auto-"fixes" an inline literal :src back into exactly
+// that broken static form, so the value must live here in the script.
+const PATHORS_LOGO_URL = '/dashboard/images/integrations/pathors.png';
 // Pathors provisioning points the agent bot at
 // `{PATHORS_BACKEND}/project/{projectId}/integration/chatwoot/callback`
 const PATHORS_CALLBACK_REGEX =
@@ -133,11 +139,8 @@ onMounted(() => {
             class="flex flex-col lg:flex-row lg:items-center items-start flex-1 gap-6"
           >
             <div class="flex items-center justify-center flex-shrink-0 size-16">
-              <!-- Bound, not static: a literal src is compiled to a module
-                   import by the Vue plugin and Rollup cannot resolve public/
-                   paths — the repo-wide convention is a runtime-string :src. -->
               <img
-                src="/dashboard/images/integrations/pathors.png"
+                :src="PATHORS_LOGO_URL"
                 alt=""
                 class="max-w-full border rounded-md shadow-sm border-n-weak bg-n-alpha-3 dark:bg-n-alpha-2"
               />
