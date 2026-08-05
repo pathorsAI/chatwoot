@@ -1,4 +1,6 @@
 class MailPresenter < SimpleDelegator
+  BULK_PRECEDENCE_VALUES = %w[bulk list junk].freeze
+
   attr_accessor :mail
 
   def initialize(mail, account = nil)
@@ -105,7 +107,8 @@ class MailPresenter < SimpleDelegator
       subject: subject,
       text_content: text_content,
       to: to,
-      auto_reply: auto_reply?
+      auto_reply: auto_reply?,
+      newsletter: newsletter?
     }
   end
 
@@ -145,7 +148,10 @@ class MailPresenter < SimpleDelegator
     headers = {
       'x-original-from' => @mail['X-Original-From']&.value,
       'x-original-sender' => @mail['X-Original-Sender']&.value,
-      'x-forwarded-for' => @mail['X-Forwarded-For']&.value
+      'x-forwarded-for' => @mail['X-Forwarded-For']&.value,
+      'list-unsubscribe' => @mail['List-Unsubscribe']&.value,
+      'list-id' => @mail['List-Id']&.value,
+      'precedence' => @mail['Precedence']&.value
     }.compact
 
     headers.presence
@@ -167,6 +173,19 @@ class MailPresenter < SimpleDelegator
 
   def auto_reply?
     auto_submitted? || x_auto_reply?
+  end
+
+  def newsletter?
+    newsletter_matches.present?
+  end
+
+  # Bulk mail markers found on the message, kept around so a filtering decision can be audited later.
+  def newsletter_matches
+    @newsletter_matches ||= [
+      ('list_unsubscribe' if @mail['List-Unsubscribe'].present?),
+      ('list_id' if @mail['List-Id'].present?),
+      ('precedence' if BULK_PRECEDENCE_VALUES.include?(@mail['Precedence']&.value&.downcase))
+    ].compact
   end
 
   def bounced?
