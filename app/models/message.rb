@@ -154,12 +154,17 @@ class Message < ApplicationRecord
       conversation_id: conversation&.display_id,
       conversation: conversation.present? ? conversation_push_event_data : nil
     )
+    merge_optional_event_attributes(data)
+    merge_sender_attributes(data)
+  end
+
+  def merge_optional_event_attributes(data)
     data[:echo_id] = echo_id if echo_id.present?
     data[:attachments] = attachments.map(&:push_event_data) if attachments.present?
     # Mirrors _message.json.jbuilder so websocket updates (e.g. after `touch`)
     # carry the same `call` payload the REST response does.
     data[:call] = call.push_event_data if voice_call? && call.present?
-    merge_sender_attributes(data)
+    data
   end
 
   def conversation_push_event_data
