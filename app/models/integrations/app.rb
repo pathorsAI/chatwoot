@@ -1,5 +1,19 @@
 class Integrations::App
   include Linear::IntegrationHelper
+
+  # Pathors: never offered in the catalog. Each of these asks the customer to
+  # paste a third-party AI credential — an OpenAI key, or a Google
+  # service-account JSON — and then runs a second AI in parallel with the
+  # Pathors agent, on the customer's own bill. The Pathors agent is the only AI
+  # in this product, and we provision it for them rather than have them
+  # configure it.
+  PATHORS_WITHHELD_APPS = %w[openai dialogflow google_translate].freeze
+
+  # Pathors provisioning creates an agent bot whose outgoing_url points at
+  # `{PATHORS_BACKEND}/project/{project_id}/integration/chatwoot/callback`.
+  # The presence of such a bot is what "connected to Pathors" means.
+  PATHORS_CALLBACK_URL_FRAGMENT = '/integration/chatwoot/callback'.freeze
+
   attr_accessor :params
 
   def initialize(params)
@@ -53,6 +67,14 @@ class Integrations::App
   end
 
   def active?(account)
+    return false if PATHORS_WITHHELD_APPS.include?(params[:id])
+
+    credentials_available?(account)
+  end
+
+  # Whether the instance/account has what this app needs to be usable at all —
+  # an OAuth client on the instance, a feature flag on the account, or both.
+  def credentials_available?(account)
     case params[:id]
     when 'slack'
       GlobalConfigService.load('SLACK_CLIENT_SECRET', nil).present?
@@ -65,6 +87,8 @@ class Integrations::App
     when 'notion'
       notion_enabled?(account)
     else
+      # `pathors` deliberately falls through here: the card is the entry point to
+      # the Pathors platform and is always listed, connected or not.
       true
     end
   end
@@ -88,6 +112,8 @@ class Integrations::App
       account.webhooks.exists?
     when 'dashboard_apps'
       account.dashboard_apps.exists?
+    when 'pathors'
+      pathors_bot_connected?(account)
     else
       account.hooks.exists?(app_id: id)
     end
@@ -129,5 +155,9 @@ class Integrations::App
 
   def notion_enabled?(account)
     account.feature_enabled?('notion_integration') && GlobalConfigService.load('NOTION_CLIENT_ID', nil).present?
+  end
+
+  def pathors_bot_connected?(account)
+    account.agent_bots.exists?(['outgoing_url LIKE ?', "%#{PATHORS_CALLBACK_URL_FRAGMENT}%"])
   end
 end
