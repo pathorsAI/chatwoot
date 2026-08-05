@@ -140,11 +140,11 @@ class Conversation < ApplicationRecord
   before_create :determine_conversation_status
   before_create :ensure_waiting_since
   before_create :prioritize_vip_sender
+  before_create :apply_sender_triage_labels
 
   after_update_commit :execute_after_update_commit_callbacks
   after_create_commit :notify_conversation_creation
   after_create_commit :load_attributes_created_by_db_triggers
-  after_create_commit :apply_sender_triage_labels
   before_destroy :set_unread_count_deletion_data
   after_destroy_commit :notify_conversation_deletion
 
@@ -329,18 +329,27 @@ class Conversation < ApplicationRecord
     self.priority = :high
   end
 
+  # Assigned before create so the labels are persisted along with the conversation. Labelling after
+  # creation would dispatch a CONVERSATION_UPDATED event, which conversation rules assume creation never does.
   def apply_sender_triage_labels
     lanes = [('vip' if additional_attributes['sender_list'] == 'vip'), additional_attributes['filtered']].compact
     return if lanes.blank?
 
-    add_labels(SENDER_TRIAGE_LABELS.values_at(*lanes).compact.map { |label| ensure_label(label).title })
+    self.label_list = SENDER_TRIAGE_LABELS.values_at(*lanes).compact.map { |label| ensure_label(label).title }
   end
 
+  # The create runs in a savepoint so that a concurrent delivery losing the race against the unique
+  # index on (title, account_id) can fall back to the winner's label instead of aborting the conversation.
   def ensure_label(label)
-    account.labels.find_or_create_by!(title: label[:title]) do |record|
-      record.color = label[:color]
-      record.show_on_sidebar = true
+    account.labels.find_by(title: label[:title]) || create_triage_label(label)
+  end
+
+  def create_triage_label(label)
+    Label.transaction(requires_new: true) do
+      account.labels.create!(title: label[:title], color: label[:color], show_on_sidebar: true)
     end
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
+    account.labels.find_by!(title: label[:title])
   end
 
   def handle_campaign_status

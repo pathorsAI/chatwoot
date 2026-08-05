@@ -1,5 +1,7 @@
 class MailPresenter < SimpleDelegator
   BULK_PRECEDENCE_VALUES = %w[bulk list junk].freeze
+  # Kept on the message so a forwarding chain or a filtering decision can be audited later.
+  AUDITED_HEADERS = %w[X-Original-From X-Original-Sender X-Forwarded-For List-Unsubscribe List-Id Precedence].freeze
 
   attr_accessor :mail
 
@@ -145,16 +147,7 @@ class MailPresenter < SimpleDelegator
   end
 
   def headers_data
-    headers = {
-      'x-original-from' => @mail['X-Original-From']&.value,
-      'x-original-sender' => @mail['X-Original-Sender']&.value,
-      'x-forwarded-for' => @mail['X-Forwarded-For']&.value,
-      'list-unsubscribe' => @mail['List-Unsubscribe']&.value,
-      'list-id' => @mail['List-Id']&.value,
-      'precedence' => @mail['Precedence']&.value
-    }.compact
-
-    headers.presence
+    AUDITED_HEADERS.index_with { |name| header_value(name) }.transform_keys(&:downcase).compact.presence
   end
 
   def email_forwarded_for
@@ -182,10 +175,16 @@ class MailPresenter < SimpleDelegator
   # Bulk mail markers found on the message, kept around so a filtering decision can be audited later.
   def newsletter_matches
     @newsletter_matches ||= [
-      ('list_unsubscribe' if @mail['List-Unsubscribe'].present?),
-      ('list_id' if @mail['List-Id'].present?),
-      ('precedence' if BULK_PRECEDENCE_VALUES.include?(@mail['Precedence']&.value&.downcase))
+      ('list_unsubscribe' if header_value('List-Unsubscribe').present?),
+      ('list_id' if header_value('List-Id').present?),
+      ('precedence' if BULK_PRECEDENCE_VALUES.include?(header_value('Precedence')&.downcase))
     ].compact
+  end
+
+  # Mail::Header#[] returns an array when a header appears more than once, which is common on
+  # relayed bulk mail carrying both the sender's and the list manager's copy of a header.
+  def header_value(name)
+    Array(@mail[name]).first&.value
   end
 
   def bounced?

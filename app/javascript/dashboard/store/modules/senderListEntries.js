@@ -21,22 +21,6 @@ export const getters = {
   getEntriesByType: _state => listType => {
     return _state.records.filter(record => record.list_type === listType);
   },
-  // Returns the entry that governs an email address, matching either the exact
-  // address or its domain.
-  getEntryForEmail: _state => email => {
-    if (!email) return null;
-
-    const value = email.trim().toLowerCase();
-    const domain = value.split('@')[1];
-
-    return (
-      _state.records.find(record => record.value.toLowerCase() === value) ||
-      _state.records.find(
-        record => domain && record.value.toLowerCase() === domain
-      ) ||
-      null
-    );
-  },
 };
 
 export const actions = {

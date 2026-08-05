@@ -29,9 +29,9 @@ const store = useStore();
 const inputValue = ref('');
 const errors = ref([]);
 const deletingId = ref(null);
+const isSubmitting = ref(false);
 
 const entriesByType = useMapGetter('senderListEntries/getEntriesByType');
-const uiFlags = useMapGetter('senderListEntries/getUIFlags');
 
 const entries = computed(() => entriesByType.value(props.listType));
 const parsedValues = computed(() => parseSenderListValues(inputValue.value));
@@ -39,14 +39,18 @@ const parsedValues = computed(() => parseSenderListValues(inputValue.value));
 const addEntries = async () => {
   if (!parsedValues.value.length) return;
 
+  isSubmitting.value = true;
   try {
     errors.value = await store.dispatch('senderListEntries/create', {
       listType: props.listType,
       values: parsedValues.value,
     });
-    inputValue.value = '';
+    // Rejected values stay in the field so they can be corrected without retyping the batch.
+    if (!errors.value.length) inputValue.value = '';
   } catch (error) {
     useAlert(t('SENDER_LISTS.API.CREATE_ERROR'));
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -80,8 +84,8 @@ const removeEntry = async entry => {
         type="submit"
         size="sm"
         :label="$t('SENDER_LISTS.FORM.ADD')"
-        :is-loading="uiFlags.isCreating"
-        :disabled="!parsedValues.length || uiFlags.isCreating"
+        :is-loading="isSubmitting"
+        :disabled="!parsedValues.length || isSubmitting"
       />
     </form>
 
