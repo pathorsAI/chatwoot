@@ -20,6 +20,7 @@
     },
     "FORM": {
       "PLACEHOLDER": "name@example.com, example.com",
+      "ARIA_LABEL": "Add senders to the {list} list",
       "ADD": "Add",
       "REMOVE": "Remove",
       "ERROR": "{value}: {message}"

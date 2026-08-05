@@ -78,6 +78,7 @@ const removeEntry = async entry => {
         v-model="inputValue"
         size="sm"
         class="w-full max-w-md"
+        :aria-label="$t('SENDER_LISTS.FORM.ARIA_LABEL', { list: title })"
         :placeholder="$t('SENDER_LISTS.FORM.PLACEHOLDER')"
       />
       <Button
