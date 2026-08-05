@@ -30,15 +30,18 @@ RSpec.describe 'Integration Apps API', type: :request do
         expect(apps['action']).to be_nil
       end
 
-      it 'will not return sensitive information for dyte app for agents' do
-        dyte = create(:integrations_hook, :dyte, account: account)
+      it 'will not return sensitive information for slack app for agents' do
+        slack = create(:integrations_hook, account: account, settings: { channel_name: 'support', signing_secret: 'secret' })
+        allow(GlobalConfigService).to receive(:load).and_call_original
+        allow(GlobalConfigService).to receive(:load).with('SLACK_CLIENT_SECRET', nil).and_return('client_secret')
+
         get api_v1_account_integrations_apps_url(account),
             headers: agent.create_new_auth_token,
             as: :json
 
         expect(response).to have_http_status(:success)
 
-        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == dyte.app.id }
+        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == slack.app.id }
         expect(app['hooks'].first['settings']).to be_nil
       end
 
@@ -81,31 +84,19 @@ RSpec.describe 'Integration Apps API', type: :request do
         expect(slack_app['action']).to include('client_id=client_id')
       end
 
-      it 'returns visible hook settings for dyte app for admins' do
-        dyte = create(:integrations_hook, :dyte, account: account)
+      it 'returns visible hook settings for slack app for admins' do
+        slack = create(:integrations_hook, account: account, settings: { channel_name: 'support', signing_secret: 'secret' })
+        allow(GlobalConfigService).to receive(:load).and_call_original
+        allow(GlobalConfigService).to receive(:load).with('SLACK_CLIENT_SECRET', nil).and_return('client_secret')
+
         get api_v1_account_integrations_apps_url(account),
             headers: admin.create_new_auth_token,
             as: :json
 
         expect(response).to have_http_status(:success)
 
-        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == dyte.app.id }
+        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == slack.app.id }
         expect(app['hooks'].first['settings']).not_to be_nil
-      end
-
-      it 'redacts secrets and only returns visible settings for dyte hooks' do
-        dyte = create(
-          :integrations_hook,
-          :dyte,
-          account: account,
-          settings: { account_id: 'acc-1', app_id: 'app-1', api_token: 'secret-token' }
-        )
-        get api_v1_account_integrations_apps_url(account),
-            headers: admin.create_new_auth_token,
-            as: :json
-
-        app = response.parsed_body['payload'].find { |int_app| int_app['id'] == dyte.app.id }
-        expect(app['hooks'].first['settings']).to eq('account_id' => 'acc-1', 'app_id' => 'app-1')
       end
 
       it 'keeps slack channel display settings while redacting unspecified settings' do
