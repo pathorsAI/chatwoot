@@ -133,6 +133,9 @@ onMounted(() => {
             class="flex flex-col lg:flex-row lg:items-center items-start flex-1 gap-6"
           >
             <div class="flex items-center justify-center flex-shrink-0 size-16">
+              <!-- Bound, not static: a literal src is compiled to a module
+                   import by the Vue plugin and Rollup cannot resolve public/
+                   paths — the repo-wide convention is a runtime-string :src. -->
               <img
                 src="/dashboard/images/integrations/pathors.png"
                 alt=""
