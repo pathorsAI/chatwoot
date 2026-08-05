@@ -54,6 +54,13 @@ class Integrations::App
 
   def active?(account)
     case params[:id]
+    # Pathors: never offered. Each of these asks the customer to paste a
+    # third-party AI credential — an OpenAI key, or a Google service-account
+    # JSON — and then runs a second AI in parallel with the Pathors agent, on
+    # the customer's own bill. The Pathors agent is the only AI in this
+    # product, and it is provisioned for them rather than configured by them.
+    when 'openai', 'dialogflow', 'google_translate'
+      false
     when 'slack'
       GlobalConfigService.load('SLACK_CLIENT_SECRET', nil).present?
     when 'linear'
