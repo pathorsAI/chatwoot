@@ -310,6 +310,10 @@ zh_TW:
       ticket:
         created: '已建立工單：%{subject}'
         waiting_on: '工單目前等待中：%{waiting_on}'
+        waiting_on_labels:
+          customer: 客戶
+          internal: 內部團隊
+          external: 外部單位
         waiting_cleared: '工單已結束等待'
         task_completed: '工作項已完成：%{title}'
       status:
