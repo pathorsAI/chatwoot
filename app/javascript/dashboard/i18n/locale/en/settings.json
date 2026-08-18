@@ -434,7 +434,8 @@
       "MINE": "My tickets",
       "TRIAGE": "Needs triage",
       "OVERDUE": "Overdue"
-    }
+    },
+    "PEOPLE": "People & teams"
   },
   "DATA_IMPORTS": {
     "HEADER": "Data",

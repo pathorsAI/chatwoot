@@ -411,8 +411,7 @@ const SETTINGS_GROUP_LAYOUT = [
     labelKey: 'SIDEBAR.SETTINGS_GROUPS.PEOPLE',
     icon: 'i-lucide-users',
     items: [
-      'Settings Agents',
-      'Settings Teams',
+      'Settings People',
       'Settings Agent Assignment',
       'Settings Custom Roles',
     ],
@@ -448,6 +447,9 @@ const SETTINGS_GROUP_LAYOUT = [
 // where "required attributes before resolving" is configured — bring the entry
 // back if that ticket resolve rule is ever turned on.
 const HIDDEN_SETTINGS_ITEMS = [
+  // Superseded by the merged 'Settings People' entry below.
+  'Settings Agents',
+  'Settings Teams',
   'Settings Macros',
   'Settings Automation',
   'Conversation Workflow',
@@ -924,26 +926,21 @@ const menuItems = computed(() => {
         //   to: accountScopedRoute('captain_settings_index'),
         // },
         {
-          name: 'Settings Agents',
-          label: t('SIDEBAR.AGENTS'),
-          icon: 'i-lucide-square-user',
-          to: accountScopedRoute('agent_list'),
-        },
-        {
-          name: 'Settings Teams',
-          label: t('SIDEBAR.TEAMS'),
+          name: 'Settings People',
+          label: t('SIDEBAR.PEOPLE'),
           icon: 'i-lucide-users',
+          to: accountScopedRoute('settings_people_index'),
           activeOn: [
+            'settings_people_index',
+            'agent_list',
             'settings_teams_list',
             'settings_teams_new',
-            'settings_teams_finish',
             'settings_teams_add_agents',
-            'settings_teams_show',
+            'settings_teams_finish',
             'settings_teams_edit',
             'settings_teams_edit_members',
             'settings_teams_edit_finish',
           ],
-          to: accountScopedRoute('settings_teams_list'),
         },
         ...(hasAdvancedAssignment.value
           ? [

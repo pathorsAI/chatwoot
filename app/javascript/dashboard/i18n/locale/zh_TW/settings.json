@@ -430,7 +430,8 @@
       "MINE": "我的工單",
       "TRIAGE": "待分派",
       "OVERDUE": "逾期"
-    }
+    },
+    "PEOPLE": "人員與團隊"
   },
   "DATA_IMPORTS": {
     "HEADER": "Data",
