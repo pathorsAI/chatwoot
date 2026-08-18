@@ -404,6 +404,63 @@ RSpec.describe 'Pathors Calls API', type: :request do
         expect(response).to have_http_status(:unprocessable_entity)
         expect(response.parsed_body['error']).to eq('pathors_not_configured')
       end
+
+      context 'when the account holds bots for more than one pathors project' do
+        let(:inbox_join_url) { 'https://api.pathors.example/project/proj_99/integration/chatwoot/voice/join' }
+        let(:inbox_bot) do
+          create(:agent_bot, account: account,
+                             outgoing_url: 'https://api.pathors.example/project/proj_99/integration/chatwoot/callback')
+        end
+
+        before do
+          stub_request(:post, inbox_join_url).to_return(
+            status: 200, body: join_response.to_json, headers: { 'Content-Type' => 'application/json' }
+          )
+          stub_join
+        end
+
+        it 'signs with the bot bound to the call inbox rather than another project bot' do
+          create(:agent_bot_inbox, inbox: conversation.inbox, agent_bot: inbox_bot)
+
+          post "/api/v1/accounts/#{account.id}/pathors/calls/#{call.id}/join",
+               headers: agent.create_new_auth_token, as: :json
+
+          expected_body = {
+            sessionId: call.provider_call_id,
+            conversationId: conversation.display_id,
+            agent: { id: agent.id, name: agent.available_name }
+          }.to_json
+          expected_signature = "sha256=#{OpenSSL::HMAC.hexdigest('SHA256', inbox_bot.secret, expected_body)}"
+
+          expect(response).to have_http_status(:success)
+          expect(
+            a_request(:post, inbox_join_url).with(body: expected_body, headers: { 'X-Pathors-Signature' => expected_signature })
+          ).to have_been_made.once
+          expect(a_request(:post, join_url)).not_to have_been_made
+        end
+
+        it 'falls back to the account bot when the inbox has no bot bound' do
+          inbox_bot
+
+          post "/api/v1/accounts/#{account.id}/pathors/calls/#{call.id}/join",
+               headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(a_request(:post, join_url)).to have_been_made.once
+          expect(a_request(:post, inbox_join_url)).not_to have_been_made
+        end
+
+        it 'falls back to the account bot when the inbox is bound to a non-pathors bot' do
+          other_bot = create(:agent_bot, account: account, outgoing_url: 'https://example.com/hooks/other')
+          create(:agent_bot_inbox, inbox: conversation.inbox, agent_bot: other_bot)
+
+          post "/api/v1/accounts/#{account.id}/pathors/calls/#{call.id}/join",
+               headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(a_request(:post, join_url)).to have_been_made.once
+        end
+      end
     end
   end
 end

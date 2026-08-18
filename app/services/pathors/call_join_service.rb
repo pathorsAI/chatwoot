@@ -2,14 +2,13 @@
 # owns the LiveKit room the voice agent is already speaking in and hands back a
 # participant token so the human can drop into the same room.
 #
-# Everything about the destination is derived from the account's Pathors agent
-# bot: its `outgoing_url` carries both the backend origin and the project id,
-# and its webhook secret keys the request signature. There is no extra config
-# surface to keep in sync.
+# Everything about the destination is derived from the Pathors agent bot behind
+# the call's inbox: its `outgoing_url` carries both the backend origin and the
+# project id, and its webhook secret keys the request signature. There is no
+# extra config surface to keep in sync.
 class Pathors::CallJoinService
   # https://api.pathors.com/project/{projectId}/integration/chatwoot/callback
   CALLBACK_PATH_PATTERN = %r{\A/project/([^/]+)/integration/chatwoot/callback/*\z}
-  CALLBACK_PATH_MARKER = '/integration/chatwoot/callback'.freeze
   REQUEST_TIMEOUT = 10
   # Statuses the Pathors contract defines as meaningful to the browser; anything
   # else is an upstream malfunction and is collapsed into a 502.
@@ -130,9 +129,22 @@ class Pathors::CallJoinService
     nil
   end
 
+  # An account can hold more than one Pathors bot — one per project — so the
+  # account is too coarse a key to pick by: the wrong bot means the wrong
+  # project id in the URL and the wrong secret on the signature, which the
+  # backend answers with a 401. The inbox the call arrived on is bound to
+  # exactly one bot, so that binding is the authoritative answer whenever it
+  # points at Pathors. The account-wide scan stays as the fallback for inboxes
+  # that were never bound (single-project installs, bots attached elsewhere).
   def agent_bot
     return @agent_bot if defined?(@agent_bot)
 
-    @agent_bot = @call.account.agent_bots.where('outgoing_url LIKE ?', "%#{CALLBACK_PATH_MARKER}%").order(:id).first
+    fragment = Integrations::App::PATHORS_CALLBACK_URL_FRAGMENT
+    inbox_bot = @call.inbox.agent_bot
+    @agent_bot = if inbox_bot&.outgoing_url&.include?(fragment)
+                   inbox_bot
+                 else
+                   @call.account.agent_bots.where('outgoing_url LIKE ?', "%#{fragment}%").order(:id).first
+                 end
   end
 end
