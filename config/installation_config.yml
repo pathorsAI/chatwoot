@@ -144,6 +144,10 @@
   description: 'The verify token used for Instagram Webhook'
   locked: false
   type: secret
+- name: FACEBOOK_LOGIN_CONFIG_ID
+  display_title: 'Facebook Login Configuration ID'
+  description: 'Configuration ID from Facebook Login for Business. Required for business-type Meta apps, whose login dialog rejects plain scope requests. Leave empty for classic apps'
+  locked: false
 - name: FACEBOOK_API_VERSION
   display_title: 'Facebook API Version'
   description: 'Configure this if you want to use a different Facebook API version. Make sure its prefixed with `v`'
