@@ -1417,6 +1417,22 @@ RSpec.describe 'Inboxes API', type: :request do
           expect(voice_inbox.reload.agent_bot).to eq(current_pathors_bot)
         end
 
+        it 'refuses a bot that names no Pathors project' do
+          plain_bot = create(:agent_bot, account: account, outgoing_url: 'https://example.com/webhook')
+
+          post "/api/v1/accounts/#{account.id}/inboxes/#{voice_inbox.id}/set_agent_bot",
+               headers: admin.create_new_auth_token,
+               params: { agent_bot: plain_bot.id },
+               as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body['error']).to be_present
+          # The refusal has to roll the assignment back, or the dashboard would
+          # credit a bot that answers nothing while calls reach proj_123.
+          expect(voice_inbox.reload.agent_bot).to eq(current_pathors_bot)
+          expect(WebMock).not_to have_requested(:any, binding_url)
+        end
+
         it 'leaves the routing untouched when the bot is removed' do
           post "/api/v1/accounts/#{account.id}/inboxes/#{voice_inbox.id}/set_agent_bot",
                headers: admin.create_new_auth_token,
@@ -1427,6 +1443,20 @@ RSpec.describe 'Inboxes API', type: :request do
           expect(voice_inbox.reload.agent_bot).to be_nil
           expect(WebMock).not_to have_requested(:any, binding_url)
         end
+      end
+
+      it 'allows any bot on a voice inbox that holds no Pathors number' do
+        channel = create(:channel_voice, account: account, phone_number: '+886277009999')
+        legacy_voice_inbox = channel.inbox
+        plain_bot = create(:agent_bot, account: account, outgoing_url: 'https://example.com/webhook')
+
+        post "/api/v1/accounts/#{account.id}/inboxes/#{legacy_voice_inbox.id}/set_agent_bot",
+             headers: admin.create_new_auth_token,
+             params: { agent_bot: plain_bot.id },
+             as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(legacy_voice_inbox.reload.agent_bot).to eq(plain_bot)
       end
 
       it 'does not allow binding an agent bot from another account' do

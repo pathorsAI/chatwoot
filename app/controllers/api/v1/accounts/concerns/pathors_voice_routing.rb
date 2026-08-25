@@ -46,8 +46,18 @@ module Api::V1::Accounts::Concerns::PathorsVoiceRouting
     return unless @inbox.channel.is_a?(Channel::Voice)
 
     phone_number_id = @inbox.channel.pathors_phone_number_id
+    # An inbox whose number predates the binding flow has no routing to keep
+    # consistent, so it can carry any bot the account has.
+    return if phone_number_id.blank?
+
+    # A bound number can only be answered by a Pathors project, so a bot that
+    # names none is refused rather than recorded: the API is a way in here too,
+    # and an accepted assignment would leave the dashboard crediting an agent
+    # while calls keep reaching whichever project the previous bot named.
     project_id = @agent_bot.pathors_project_id
-    return if phone_number_id.blank? || project_id.blank? || project_id == previous_project_id
+    raise CustomExceptions::Pathors::AgentBotRequired.new({}) if project_id.blank?
+
+    return if project_id == previous_project_id
 
     Pathors::PhoneNumbersService.new(account: Current.account)
                                 .bind(phone_number_id: phone_number_id, inbox: @inbox, project_id: project_id)
