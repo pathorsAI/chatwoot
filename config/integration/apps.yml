@@ -384,7 +384,7 @@ github:
     [
       {
         'label': 'Personal Access Token',
-        'type': 'text',
+        'type': 'password',
         'name': 'access_token',
         'validation': 'required',
         'help': 'A GitHub personal access token that is allowed to create issues in the repository below.',
