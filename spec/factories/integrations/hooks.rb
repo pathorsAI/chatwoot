@@ -45,6 +45,11 @@ FactoryBot.define do
       access_token { SecureRandom.hex }
     end
 
+    trait :github do
+      app_id { 'github' }
+      settings { { 'access_token' => 'github_pat_token', 'repository' => 'pathorsAI/chatwoot' } }
+    end
+
     trait :shopify do
       app_id { 'shopify' }
       access_token { SecureRandom.hex }

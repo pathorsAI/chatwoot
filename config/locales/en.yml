@@ -457,6 +457,16 @@ en:
       name: 'LeadSquared'
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
+    github:
+      name: 'GitHub'
+      short_description: 'Open a GitHub issue whenever a ticket is created.'
+      description: 'Hand cases over to engineering automatically. Whenever a ticket is created, this integration opens an issue in the GitHub repository you configure, carrying the contact, the ticket details and a link back to the conversation.'
+      issue_created_note: 'GitHub issue created for this ticket: %{url}'
+      issue:
+        contact: 'Contact'
+        ticket_type: 'Ticket type'
+        due_at: 'Due'
+        conversation: 'Conversation'
   captain:
     copilot_message_required: Message is required
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'

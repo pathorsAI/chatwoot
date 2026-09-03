@@ -436,6 +436,16 @@ zh_TW:
       name: 'LeadSquared'
       short_description: '將您的聯絡人和對話與 LeadSquared CRM 同步。'
       description: '將您的聯絡人和對話與 LeadSquared CRM 同步。此整合會在新增聯絡人時自動在 LeadSquared 中建立潛在客戶，並記錄對話活動，為您的銷售團隊提供完整的上下文。'
+    github:
+      name: 'GitHub'
+      short_description: '建立工單時自動開一則 GitHub issue。'
+      description: '自動把案件交接給工程團隊。每當有人建立工單，此整合就會在您設定的 GitHub 儲存庫開一則 issue，並帶上聯絡人、工單資訊與回到對話的連結。'
+      issue_created_note: '已為這張工單建立 GitHub issue：%{url}'
+      issue:
+        contact: '聯絡人'
+        ticket_type: '工單類型'
+        due_at: '到期日'
+        conversation: '對話'
   captain:
     copilot_message_required: 訊息為必填
     copilot_error: '請先為此收件匣連結助理以使用 Copilot'
