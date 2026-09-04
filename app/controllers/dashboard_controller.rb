@@ -66,7 +66,7 @@ class DashboardController < ActionController::Base
     return unless @portal
 
     @locale = @portal.default_locale
-    request.variant = :documentation if @portal.layout == 'documentation'
+    request.variant = @portal.layout.to_sym if Public::Api::V1::Portals::BaseController::VARIANT_LAYOUTS.include?(@portal.layout)
     load_home_data
     render 'public/api/v1/portals/show', layout: 'portal', portal: @portal and return
   end

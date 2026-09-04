@@ -39,4 +39,20 @@ describe '/app/login', type: :request do
       Rails.application.reload_routes!
     end
   end
+
+  context 'when the host is a portal custom domain' do
+    let(:account) { create(:account) }
+    let(:portal) do
+      create(:portal, account: account, custom_domain: 'support.example.test',
+                      config: { 'layout' => 'focused', 'allowed_locales' => ['en'], 'default_locale' => 'en' })
+    end
+
+    it 'renders the help center home in the layout the portal selected' do
+      host! portal.custom_domain
+      get '/'
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include('data-layout="focused"')
+      expect(response.body).not_to include('sdk.js')
+    end
+  end
 end
