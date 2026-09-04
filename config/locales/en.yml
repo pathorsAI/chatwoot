@@ -572,17 +572,23 @@ en:
       description: Please contact the site administrator for more information.
       action: If you are the administrator, please upgrade your plan to restore access.
     tickets:
-      back_to_home: Go to home page
       nav:
         submit_a_ticket: Submit a ticket
         my_tickets: My tickets
       fields:
         name: Name
+        name_placeholder: Your name
         email: Email
+        email_placeholder: you@company.com
         subject: Subject
+        subject_placeholder: A short summary of the problem
         ticket_type: Type
-        ticket_type_blank: Select a type
         description: How can we help?
+        description_placeholder: Tell us what happened, and what you expected instead.
+        attachments: Screenshots or files
+        attachments_drop: Drop files here, or click to upload
+        attachments_hint: 'PNG, JPG, PDF, logs · up to %{count} files, %{size} each'
+        attachments_remove: Remove file
       types:
         question: Question
         issue: Issue
@@ -592,22 +598,32 @@ en:
         triage: New
         in_progress: In progress
         waiting: Waiting
+        waiting_customer: Waiting for you
         done: Resolved
         closed: Closed
       errors:
         email: Enter a valid email address.
         subject: Enter a subject.
+        ticket_type: Choose a type.
         description: Describe your request.
+        attachments_count: 'You can attach up to %{count} files.'
+        attachment_size: '%{filename} is larger than %{size}.'
+        attachment_type: '%{filename} is not a supported file type.'
+        attachment_count_short: 'Over the %{count} file limit'
+        attachment_size_short: 'Larger than %{size}'
+        attachment_type_short: File type not supported
       new:
         title: Submit a ticket
         description: Tell us what you need and we will get back to you by email.
         submit: Submit ticket
+        already_have_a_ticket: Already have a ticket?
         view_my_tickets: View my tickets
       created:
         title: Your ticket has been created
-        description: We have received your request and will reply by email.
-        reference: Ticket number
+        reply_to: We have received your request and will reply to %{email}.
+        reference_number: 'Ticket #%{number}'
         view_my_tickets: View my tickets
+        submit_another: Submit another ticket
       access:
         title: My tickets
         description: Enter your email address and we will send you a link to view your tickets.
@@ -621,15 +637,18 @@ en:
         subject: 'Your ticket access link for %{portal_name}'
       index:
         title: My tickets
+        subtitle:
+          one: '1 ticket · %{email}'
+          other: '%{count} tickets · %{email}'
         new_ticket: Submit a ticket
         empty: You do not have any tickets yet.
-        updated_at: 'Updated %{time}'
+        updated_ago: 'updated %{time} ago'
       show:
         back_to_list: Back to my tickets
-        created_at: 'Created %{time}'
-        timeline: Conversation
+        created_at: 'created %{time}'
         no_messages: There are no messages on this ticket yet.
         you: You
+        attachments: Attachments
         reply_hint: To add to this ticket, reply to the email we sent you.
   slack_unfurl:
     fields:

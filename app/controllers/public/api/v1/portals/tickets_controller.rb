@@ -23,12 +23,15 @@ class Public::Api::V1::Portals::TicketsController < Public::Api::V1::Portals::Ba
     @ticket = contact_tickets.find_by(id: params[:id])
     return render_404 if @ticket.blank?
 
-    @messages = @ticket.conversation.messages.chat.includes(:sender).order(created_at: :asc)
+    @messages = @ticket.conversation.messages.chat.includes(:sender, attachments: { file_attachment: :blob }).order(created_at: :asc)
   end
 
   def new
     @ticket_types = Ticket::TYPES
     @submission = { name: '', email: '', subject: '', ticket_type: nil, description: '' }
+    # Set by #create through the redirect, so a refresh cannot resubmit the form.
+    @created_display_id = flash[:portal_ticket_created]
+    @created_email = flash[:portal_ticket_email]
   end
 
   def create
@@ -37,7 +40,10 @@ class Public::Api::V1::Portals::TicketsController < Public::Api::V1::Portals::Ba
     @errors = submission_errors
     return render :new, status: :unprocessable_entity if @errors.any?
 
-    @ticket = build_ticket
+    ticket = build_ticket
+    flash[:portal_ticket_created] = ticket.conversation.display_id
+    flash[:portal_ticket_email] = @submission[:email]
+    redirect_to new_public_portal_ticket_path(@portal.slug)
   end
 
   def access; end
@@ -95,21 +101,63 @@ class Public::Api::V1::Portals::TicketsController < Public::Api::V1::Portals::Ba
   end
 
   def create_description_message(conversation, contact)
-    conversation.messages.create!(
+    message = conversation.messages.new(
       account_id: conversation.account_id,
       inbox_id: conversation.inbox_id,
       sender: contact,
       content: @submission[:description],
       message_type: :incoming
     )
+    uploaded_attachments.each do |uploaded_attachment|
+      message.attachments.new(
+        account_id: conversation.account_id,
+        file_type: helpers.file_type(uploaded_attachment.content_type),
+        file: uploaded_attachment
+      )
+    end
+    message.save!
+  end
+
+  # Files ride along as a plain multipart array, so they never go through strong
+  # params: they are read here and handed straight to ActiveStorage.
+  def uploaded_attachments
+    @uploaded_attachments ||= Array(params[:attachments]).reject(&:blank?)
   end
 
   def submission_errors
     errors = {}
     errors[:email] = I18n.t('public_portal.tickets.errors.email') unless @submission[:email].match?(Devise.email_regexp)
     errors[:subject] = I18n.t('public_portal.tickets.errors.subject') if @submission[:subject].blank?
+    errors[:ticket_type] = I18n.t('public_portal.tickets.errors.ticket_type') if @submission[:ticket_type].blank?
     errors[:description] = I18n.t('public_portal.tickets.errors.description') if @submission[:description].blank?
+    errors[:attachments] = attachment_error if attachment_error.present?
     errors
+  end
+
+  # The browser blocks these too, but the endpoint is unauthenticated and takes
+  # uploads, so the same rules are enforced here before anything is written.
+  def attachment_error
+    return @attachment_error if defined?(@attachment_error)
+
+    @attachment_error = build_attachment_error
+  end
+
+  def build_attachment_error
+    return if uploaded_attachments.empty?
+
+    if uploaded_attachments.size > PortalTicketsHelper::MAX_ATTACHMENTS
+      return I18n.t('public_portal.tickets.errors.attachments_count', count: PortalTicketsHelper::MAX_ATTACHMENTS)
+    end
+
+    oversized = uploaded_attachments.find { |file| file.size > PortalTicketsHelper::MAX_ATTACHMENT_SIZE }
+    return I18n.t('public_portal.tickets.errors.attachment_size', filename: oversized.original_filename, size: attachment_size_limit) if oversized
+
+    unsupported = uploaded_attachments.find { |file| !helpers.acceptable_ticket_attachment?(file.content_type) }
+    I18n.t('public_portal.tickets.errors.attachment_type', filename: unsupported.original_filename) if unsupported
+  end
+
+  def attachment_size_limit
+    helpers.number_to_human_size(PortalTicketsHelper::MAX_ATTACHMENT_SIZE)
   end
 
   def submission_params

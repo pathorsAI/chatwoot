@@ -2,56 +2,164 @@
   <title><%= I18n.t('public_portal.tickets.new.title') %> | <%= @portal.localized_value('name', @locale) %></title>
 <% end %>
 
-<% input_class = 'w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent' %>
-<% label_class = 'block text-sm font-medium text-slate-800 dark:text-slate-200 mb-1.5' %>
+<div class="w-full max-w-[560px] mx-auto px-4 pt-10 pb-24">
+  <% if @created_display_id.present? %>
+    <div class="text-center">
+      <div class="flex items-center justify-center w-14 h-14 mx-auto rounded-full bg-green-100 text-green-600">
+        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m4 12 5.5 5.5L20 7" />
+        </svg>
+      </div>
+      <h1 class="mt-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100"><%= I18n.t('public_portal.tickets.created.title') %></h1>
+      <p class="max-w-sm mx-auto mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+        <%= I18n.t('public_portal.tickets.created.reply_to', email: @created_email) %>
+      </p>
+      <p class="inline-block px-3 py-1 mt-3 font-mono text-sm rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+        <%= I18n.t('public_portal.tickets.created.reference_number', number: @created_display_id) %>
+      </p>
 
-<div class="w-full max-w-3xl px-4 mx-auto md:px-8 py-10 md:py-14">
-  <h1 class="text-3xl font-semibold text-slate-900 dark:text-white"><%= I18n.t('public_portal.tickets.new.title') %></h1>
-  <p class="mt-2 text-slate-600 dark:text-slate-400"><%= I18n.t('public_portal.tickets.new.description') %></p>
-
-  <form action="/hc/<%= @portal.slug %>/tickets" method="POST" class="flex flex-col gap-5 mt-8">
-    <div>
-      <label class="<%= label_class %>" for="ticket-name"><%= I18n.t('public_portal.tickets.fields.name') %></label>
-      <input class="<%= input_class %>" id="ticket-name" type="text" name="name" value="<%= @submission[:name] %>" autocomplete="name">
+      <div class="max-w-[280px] mx-auto mt-6 space-y-2.5">
+        <a href="/hc/<%= @portal.slug %>/tickets" class="flex items-center justify-center w-full h-10 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-portal hover:opacity-90">
+          <%= I18n.t('public_portal.tickets.created.view_my_tickets') %>
+        </a>
+        <a href="/hc/<%= @portal.slug %>/tickets/new" class="flex items-center justify-center w-full h-10 text-sm font-medium transition-colors rounded-md cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:opacity-90">
+          <%= I18n.t('public_portal.tickets.created.submit_another') %>
+        </a>
+      </div>
     </div>
+  <% else %>
+    <%
+      input_class = 'w-full h-10 px-3 rounded-md border bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-portal focus:border-transparent'
+      textarea_class = 'w-full min-h-[96px] px-3 py-2 rounded-md border bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-portal focus:border-transparent'
+      label_class = 'block text-sm font-medium text-zinc-900 dark:text-zinc-100'
+      counter_class = 'text-xs text-zinc-500 dark:text-zinc-400'
+      neutral_border = 'border-zinc-200 dark:border-zinc-800'
+      subject_max = PortalTicketsHelper::SUBJECT_MAX_LENGTH
+      description_max = PortalTicketsHelper::DESCRIPTION_MAX_LENGTH
+      max_attachments = PortalTicketsHelper::MAX_ATTACHMENTS
+      max_attachment_size = PortalTicketsHelper::MAX_ATTACHMENT_SIZE
+    %>
+    <h1 class="text-2xl font-bold text-center text-zinc-900 dark:text-zinc-100"><%= I18n.t('public_portal.tickets.new.title') %></h1>
+    <p class="mt-2 text-xs text-center text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.tickets.new.description') %></p>
 
-    <div>
-      <label class="<%= label_class %>" for="ticket-email"><%= I18n.t('public_portal.tickets.fields.email') %></label>
-      <input class="<%= input_class %>" id="ticket-email" type="email" name="email" value="<%= @submission[:email] %>" autocomplete="email" required>
-      <%= render 'public/api/v1/portals/tickets/field_error', message: @errors&.dig(:email) %>
-    </div>
+    <form action="/hc/<%= @portal.slug %>/tickets" method="POST" enctype="multipart/form-data" class="mt-6 space-y-6">
+      <fieldset class="space-y-2">
+        <legend class="<%= label_class %> mb-2"><%= I18n.t('public_portal.tickets.fields.ticket_type') %></legend>
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <% @ticket_types.each do |ticket_type| %>
+            <label class="relative block cursor-pointer">
+              <input type="radio" name="ticket_type" value="<%= ticket_type %>" class="sr-only peer" <%= 'checked' if @submission[:ticket_type] == ticket_type %>>
+              <span class="flex flex-col items-center gap-1.5 rounded-lg border <%= @errors&.dig(:ticket_type) ? 'border-red-400' : neutral_border %> p-3 text-center text-xs font-medium text-zinc-900 dark:text-zinc-100 transition-colors peer-checked:border-portal peer-checked:bg-blue-50 dark:peer-checked:bg-sky-950">
+                <svg class="w-5 h-5 text-zinc-500 dark:text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <% case ticket_type %>
+                  <% when 'question' %>
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M9.2 9.3a3 3 0 0 1 5.8 1c0 2-2.9 2.6-2.9 4" />
+                    <path d="M12 17.5h.01" />
+                  <% when 'issue' %>
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7.5v5" />
+                    <path d="M12 16.5h.01" />
+                  <% when 'request' %>
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M8 12h8" />
+                    <path d="M12 8v8" />
+                  <% when 'incident' %>
+                    <path d="M10.3 3.9 2.2 17.6a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+                    <path d="M12 9v4" />
+                    <path d="M12 17h.01" />
+                  <% end %>
+                </svg>
+                <%= I18n.t("public_portal.tickets.types.#{ticket_type}") %>
+              </span>
+              <svg class="absolute hidden w-3.5 h-3.5 top-1.5 right-1.5 text-portal peer-checked:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m4 12 5.5 5.5L20 7" />
+              </svg>
+            </label>
+          <% end %>
+        </div>
+        <%= render 'public/api/v1/portals/tickets/field_error', message: @errors&.dig(:ticket_type) %>
+      </fieldset>
 
-    <div>
-      <label class="<%= label_class %>" for="ticket-subject"><%= I18n.t('public_portal.tickets.fields.subject') %></label>
-      <input class="<%= input_class %>" id="ticket-subject" type="text" name="subject" value="<%= @submission[:subject] %>" required>
-      <%= render 'public/api/v1/portals/tickets/field_error', message: @errors&.dig(:subject) %>
-    </div>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div class="space-y-2">
+          <label class="<%= label_class %>" for="ticket-name"><%= I18n.t('public_portal.tickets.fields.name') %></label>
+          <input class="<%= input_class %> <%= neutral_border %>" id="ticket-name" type="text" name="name" value="<%= @submission[:name] %>"
+                 placeholder="<%= I18n.t('public_portal.tickets.fields.name_placeholder') %>" autocomplete="name">
+        </div>
+        <div class="space-y-2">
+          <label class="<%= label_class %>" for="ticket-email"><%= I18n.t('public_portal.tickets.fields.email') %></label>
+          <input class="<%= input_class %> <%= @errors&.dig(:email) ? 'border-red-400' : neutral_border %>" id="ticket-email" type="email" name="email"
+                 value="<%= @submission[:email] %>" placeholder="<%= I18n.t('public_portal.tickets.fields.email_placeholder') %>" autocomplete="email" required>
+          <%= render 'public/api/v1/portals/tickets/field_error', message: @errors&.dig(:email) %>
+        </div>
+      </div>
 
-    <div>
-      <label class="<%= label_class %>" for="ticket-type"><%= I18n.t('public_portal.tickets.fields.ticket_type') %></label>
-      <select class="<%= input_class %>" id="ticket-type" name="ticket_type">
-        <option value=""><%= I18n.t('public_portal.tickets.fields.ticket_type_blank') %></option>
-        <% @ticket_types.each do |ticket_type| %>
-          <option value="<%= ticket_type %>" <%= 'selected' if @submission[:ticket_type] == ticket_type %>>
-            <%= I18n.t("public_portal.tickets.types.#{ticket_type}") %>
-          </option>
-        <% end %>
-      </select>
-    </div>
+      <div class="space-y-2">
+        <div class="flex items-baseline justify-between">
+          <label class="<%= label_class %>" for="ticket-subject"><%= I18n.t('public_portal.tickets.fields.subject') %></label>
+          <span class="<%= counter_class %>" id="ticket-subject-count">
+            <%= number_with_delimiter(@submission[:subject].to_s.length) %> / <%= number_with_delimiter(subject_max) %>
+          </span>
+        </div>
+        <input class="<%= input_class %> <%= @errors&.dig(:subject) ? 'border-red-400' : neutral_border %>" id="ticket-subject" type="text" name="subject"
+               value="<%= @submission[:subject] %>" placeholder="<%= I18n.t('public_portal.tickets.fields.subject_placeholder') %>"
+               maxlength="<%= subject_max %>" data-counter-target="#ticket-subject-count" required>
+        <%= render 'public/api/v1/portals/tickets/field_error', message: @errors&.dig(:subject) %>
+      </div>
 
-    <div>
-      <label class="<%= label_class %>" for="ticket-description"><%= I18n.t('public_portal.tickets.fields.description') %></label>
-      <textarea class="<%= input_class %>" id="ticket-description" name="description" rows="6" required><%= @submission[:description] %></textarea>
-      <%= render 'public/api/v1/portals/tickets/field_error', message: @errors&.dig(:description) %>
-    </div>
+      <div class="space-y-2">
+        <div class="flex items-baseline justify-between">
+          <label class="<%= label_class %>" for="ticket-description"><%= I18n.t('public_portal.tickets.fields.description') %></label>
+          <span class="<%= counter_class %>" id="ticket-description-count">
+            <%= number_with_delimiter(@submission[:description].to_s.length) %> / <%= number_with_delimiter(description_max) %>
+          </span>
+        </div>
+        <textarea class="<%= textarea_class %> <%= @errors&.dig(:description) ? 'border-red-400' : neutral_border %>" id="ticket-description" name="description"
+                  placeholder="<%= I18n.t('public_portal.tickets.fields.description_placeholder') %>"
+                  maxlength="<%= description_max %>" data-counter-target="#ticket-description-count" required><%= @submission[:description] %></textarea>
+        <%= render 'public/api/v1/portals/tickets/field_error', message: @errors&.dig(:description) %>
+      </div>
 
-    <div class="flex flex-wrap items-center gap-4">
-      <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white rounded-lg bg-slate-900 dark:bg-white dark:text-slate-900">
+      <div class="space-y-2">
+        <div class="flex items-baseline justify-between">
+          <label class="<%= label_class %>" for="ticket-attachments-input"><%= I18n.t('public_portal.tickets.fields.attachments') %></label>
+          <span class="<%= counter_class %>" data-attachment-count>0 / <%= max_attachments %></span>
+        </div>
+        <div id="ticket-attachments"
+             data-attachment-root
+             data-max-files="<%= max_attachments %>"
+             data-max-size="<%= max_attachment_size %>"
+             data-accept="<%= ticket_attachment_accept %>"
+             data-error-count="<%= I18n.t('public_portal.tickets.errors.attachment_count_short', count: max_attachments) %>"
+             data-error-size="<%= I18n.t('public_portal.tickets.errors.attachment_size_short', size: number_to_human_size(max_attachment_size)) %>"
+             data-error-type="<%= I18n.t('public_portal.tickets.errors.attachment_type_short') %>"
+             data-remove-label="<%= I18n.t('public_portal.tickets.fields.attachments_remove') %>">
+          <label class="flex flex-col items-center justify-center gap-1 p-6 text-center transition-colors border-2 border-dashed rounded-lg cursor-pointer <%= @errors&.dig(:attachments) ? 'border-red-400' : neutral_border %>" data-attachment-dropzone>
+            <input class="sr-only" id="ticket-attachments-input" type="file" name="attachments[]" multiple accept="<%= ticket_attachment_accept %>" data-attachment-input>
+            <svg class="w-6 h-6 mb-1 text-zinc-500 dark:text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 16V4" />
+              <path d="m7 9 5-5 5 5" />
+              <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+            </svg>
+            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100"><%= I18n.t('public_portal.tickets.fields.attachments_drop') %></span>
+            <span class="text-xs text-zinc-500 dark:text-zinc-400">
+              <%= I18n.t('public_portal.tickets.fields.attachments_hint', count: max_attachments, size: number_to_human_size(max_attachment_size)) %>
+            </span>
+          </label>
+          <ul class="mt-2 space-y-1.5" data-attachment-list></ul>
+        </div>
+        <%= render 'public/api/v1/portals/tickets/field_error', message: @errors&.dig(:attachments) %>
+      </div>
+
+      <button type="submit" class="w-full h-10 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-portal hover:opacity-90 disabled:opacity-50">
         <%= I18n.t('public_portal.tickets.new.submit') %>
       </button>
-      <a href="/hc/<%= @portal.slug %>/tickets/access" class="text-sm font-medium underline text-woot-500">
-        <%= I18n.t('public_portal.tickets.new.view_my_tickets') %>
-      </a>
-    </div>
-  </form>
+    </form>
+
+    <p class="mt-6 text-xs text-center text-zinc-500 dark:text-zinc-400">
+      <%= I18n.t('public_portal.tickets.new.already_have_a_ticket') %>
+      <a href="/hc/<%= @portal.slug %>/tickets/access" class="font-medium text-portal"><%= I18n.t('public_portal.tickets.new.view_my_tickets') %></a>
+    </p>
+  <% end %>
 </div>
