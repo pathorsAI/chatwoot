@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="<%= html_lang_attribute(I18n.locale) %>">
+  <head>
+    <%= render 'layouts/portal_head' %>
+  </head>
+  <body class="font-sans antialiased bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
+    <%= render 'layouts/portal_analytics_noscript' %>
+    <div id="portal">
+      <main class="flex flex-col min-h-screen" role="main">
+        <%= render 'public/api/v1/portals/focused_layout/nav', portal: @portal, locale: @locale %>
+        <%= yield %>
+        <%= render 'public/api/v1/portals/focused_layout/footer', global_config: @global_config unless @portal.account.feature_enabled?('disable_branding') %>
+      </main>
+    </div>
+    <%= render 'layouts/portal_scripts' %>
+  </body>
+</html>

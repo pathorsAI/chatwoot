@@ -53,6 +53,9 @@ RSpec.describe 'Public Portal Tickets', type: :request do
       { name: 'Jane Doe', email: 'jane@example.com', subject: 'Cannot log in', ticket_type: 'issue', description: 'It keeps failing.' }
     end
 
+    let(:png) { fixture_file_upload(Rails.root.join('spec/assets/sample.png'), 'image/png') }
+    let(:pdf) { fixture_file_upload(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf') }
+
     it 'creates a contact, a conversation and a ticket in the widget inbox' do
       expect { post "/hc/#{portal.slug}/tickets", params: payload }.to change(Ticket, :count).by(1)
 
@@ -62,7 +65,50 @@ RSpec.describe 'Public Portal Tickets', type: :request do
       expect(created_ticket.conversation.inbox_id).to eq(inbox.id)
       expect(created_ticket.conversation.contact.email).to eq('jane@example.com')
       expect(created_ticket.conversation.messages.last.content).to eq('It keeps failing.')
-      expect(response.body).to include("##{created_ticket.conversation.display_id}")
+    end
+
+    it 'redirects back to the form with the reference in the flash' do
+      post "/hc/#{portal.slug}/tickets", params: payload
+
+      expect(response).to redirect_to("/hc/#{portal.slug}/tickets/new")
+      expect(flash[:portal_ticket_created]).to eq(Ticket.last.conversation.display_id)
+      expect(flash[:portal_ticket_email]).to eq('jane@example.com')
+    end
+
+    it 'stores the uploaded files on the description message' do
+      post "/hc/#{portal.slug}/tickets", params: payload.merge(attachments: [png, pdf])
+
+      attachments = Ticket.last.conversation.messages.last.attachments
+      expect(attachments.count).to eq(2)
+      expect(attachments.map(&:file_type)).to contain_exactly('image', 'file')
+      expect(attachments.map { |attachment| attachment.file.filename.to_s }).to contain_exactly('sample.png', 'sample.pdf')
+    end
+
+    it 'rejects a submission with more attachments than the limit' do
+      files = Array.new(11) { fixture_file_upload(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf') }
+
+      expect { post "/hc/#{portal.slug}/tickets", params: payload.merge(attachments: files) }.not_to change(Ticket, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include('You can attach up to 10 files.')
+    end
+
+    it 'rejects an attachment over the size limit' do
+      oversized = fixture_file_upload(Rails.root.join('spec/assets/large_file.pdf'), 'application/pdf')
+
+      expect { post "/hc/#{portal.slug}/tickets", params: payload.merge(attachments: [oversized]) }.not_to change(Ticket, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include('large_file.pdf is larger than 10 MB.')
+    end
+
+    it 'rejects an attachment with an unsupported content type' do
+      executable = fixture_file_upload(Rails.root.join('spec/assets/sample.pdf'), 'application/x-msdownload')
+
+      expect { post "/hc/#{portal.slug}/tickets", params: payload.merge(attachments: [executable]) }.not_to change(Ticket, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include('sample.pdf is not a supported file type.')
     end
 
     it 'reuses an existing contact with the same email' do
@@ -80,6 +126,13 @@ RSpec.describe 'Public Portal Tickets', type: :request do
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include('Enter a subject.')
+    end
+
+    it 'rejects a submission without a type' do
+      expect { post "/hc/#{portal.slug}/tickets", params: payload.merge(ticket_type: '') }.not_to change(Ticket, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include('Choose a type.')
     end
 
     it 'rejects a submission with an invalid email' do
@@ -198,6 +251,20 @@ RSpec.describe 'Public Portal Tickets', type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include('My widget is broken')
       expect(response.body).not_to include('Internal note')
+    end
+
+    it 'renders the attachments of a message' do
+      message = build(:message, account: account, inbox: inbox, conversation: conversation, content: 'Here is the trace', message_type: :incoming)
+      message.attachments.new(account_id: account.id, file_type: :file,
+                              file: fixture_file_upload(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf'))
+      message.save!
+      sign_in_contact
+
+      get "/hc/#{portal.slug}/tickets/#{ticket.id}"
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include('sample.pdf')
+      expect(response.body).to include('/rails/active_storage')
     end
 
     it 'returns not found for a ticket belonging to another contact' do

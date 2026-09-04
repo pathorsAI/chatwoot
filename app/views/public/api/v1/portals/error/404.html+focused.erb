@@ -1,0 +1,8 @@
+<div class="flex flex-col items-start flex-grow w-full max-w-5xl px-4 py-20 mx-auto md:px-8">
+  <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100"><%= I18n.t('public_portal.404.title') %></h1>
+  <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.404.description') %></p>
+  <a href="<%= generate_home_link(@portal.slug, @portal.config['default_locale'] || params[:locale], @theme_from_params, @is_plain_layout_enabled) %>"
+     class="mt-6 text-sm font-semibold cursor-pointer text-n-portal hover:underline">
+    <%= I18n.t('public_portal.404.back_to_home') %>
+  </a>
+</div>

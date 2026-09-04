@@ -961,6 +961,10 @@
           "SIDEBAR": {
             "TITLE": "Documentation",
             "DESCRIPTION": "Side-by-side navigation that keeps every guide a click away."
+          },
+          "FOCUSED": {
+            "TITLE": "Focused",
+            "DESCRIPTION": "A branded hero, quick ticket links and compact category cards."
           }
         },
         "SOCIAL_LINKS": {

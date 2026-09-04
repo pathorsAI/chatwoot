@@ -32,7 +32,7 @@ module PortalConfigSchema
       'allowed_locales' => { 'type' => %w[array null], 'items' => { 'type' => 'string' } },
       'default_locale' => { 'type' => %w[string null] },
       'draft_locales' => { 'type' => %w[array null], 'items' => { 'type' => 'string' } },
-      'layout' => { 'type' => %w[string null], 'enum' => ['classic', 'documentation', nil] },
+      'layout' => { 'type' => %w[string null], 'enum' => ['classic', 'documentation', 'focused', nil] },
       # TODO: unused reserved key; remove with a migration that scrubs it from existing portals' config
       'website_token' => { 'type' => %w[string null] },
       'social_profiles' => { 'type' => %w[object null] },

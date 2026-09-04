@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 
 import classicLayoutPreview from './classic-layout-preview.svg?raw';
 import documentationLayoutPreview from './documentation-layout-preview.svg?raw';
+import focusedLayoutPreview from './focused-layout-preview.svg?raw';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
@@ -21,6 +22,7 @@ const { t } = useI18n();
 const PORTAL_LAYOUTS = {
   CLASSIC: 'classic',
   DOCUMENTATION: 'documentation',
+  FOCUSED: 'focused',
 };
 
 // `prefix` is the link the help center auto-fills; the DB only stores the handle.
@@ -200,6 +202,27 @@ const handleSave = () => {
             class="w-full mt-2 rounded-md overflow-hidden border border-solid border-n-weak bg-n-slate-2 dark:bg-n-slate-1"
           >
             <span v-dompurify-html="documentationLayoutPreview" />
+          </div>
+        </RadioCard>
+
+        <RadioCard
+          :id="PORTAL_LAYOUTS.FOCUSED"
+          beta
+          :is-active="state.layout === PORTAL_LAYOUTS.FOCUSED"
+          :label="
+            t('HELP_CENTER.PORTAL_SETTINGS.LAYOUT_CONTENT.LAYOUT.FOCUSED.TITLE')
+          "
+          :description="
+            t(
+              'HELP_CENTER.PORTAL_SETTINGS.LAYOUT_CONTENT.LAYOUT.FOCUSED.DESCRIPTION'
+            )
+          "
+          @select="value => (state.layout = value)"
+        >
+          <div
+            class="w-full mt-2 rounded-md overflow-hidden border border-solid border-n-weak bg-n-slate-2 dark:bg-n-slate-1"
+          >
+            <span v-dompurify-html="focusedLayoutPreview" />
           </div>
         </RadioCard>
       </div>

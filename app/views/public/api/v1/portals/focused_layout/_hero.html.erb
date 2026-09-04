@@ -1,0 +1,20 @@
+<%# locals: (portal:, title:, subtitle:, show_search: true) %>
+<section class="relative overflow-hidden bg-[#082f49]">
+  <%# Decorative Pathors mark, copied from the support app hero %>
+  <svg class="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 h-full pointer-events-none" viewBox="0 0 456 296" fill="none" preserveAspectRatio="xMaxYMid meet" aria-hidden="true">
+    <path d="M-3.12781e-06 73.8005C-1.40037e-06 33.042 32.0368 0.000611796 71.556 0.000613577L71.556 147.6C32.0368 147.6 -4.85525e-06 114.559 -3.12781e-06 73.8005Z" fill="#6AD4FB" />
+    <path d="M0.00097353 222.2C0.000975205 181.442 32.0377 148.4 71.557 148.4L71.557 296C32.0377 296 0.000971855 262.959 0.00097353 222.2Z" fill="#6AD4FB" />
+    <path d="M215.839 -2.41946C215.839 79.7641 151.241 146.387 71.5566 146.387L71.5566 -2.41945L215.839 -2.41946Z" fill="#0090FF" />
+    <path d="M383.493 74.404C383.493 115.496 351.194 148.807 311.352 148.807V0.000549316C351.194 0.000549316 383.493 33.3122 383.493 74.404Z" fill="#6AD4FB" />
+    <path d="M167.07 296.807C167.07 214.623 231.667 148 311.352 148L311.352 296.807L167.07 296.807Z" fill="#07AFED" />
+    <path d="M383.493 222.403C343.65 222.403 311.352 189.092 311.352 148L455.634 148C455.634 189.092 423.335 222.403 383.493 222.403Z" fill="#0D8CBE" />
+  </svg>
+
+  <div class="relative max-w-5xl mx-auto px-6 md:px-10 py-14">
+    <h1 class="text-[30px] leading-9 font-bold text-white"><%= title %></h1>
+    <p class="mt-1 text-base font-medium text-white/80"><%= subtitle %></p>
+    <% if show_search %>
+      <div id="search-wrap-hero" class="relative z-30 mt-6 max-w-[498px]"></div>
+    <% end %>
+  </div>
+</section>

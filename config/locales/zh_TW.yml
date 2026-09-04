@@ -518,6 +518,13 @@ zh_TW:
       primary_nav: Primary
     hero:
       sub_title: 在此搜尋文章或瀏覽以下分類。
+    focused:
+      nav_articles: 文章
+      hero_subtitle: 搜尋說明文件，或提交工單，我們會以電子郵件回覆。
+      hero_subtitle_tickets_only: 開一張工單，我們會透過 email 回覆你。
+      quick_submit_description: 問題、諮詢或需求，我們會以電子郵件回覆。
+      quick_mine_description: 用寄到您信箱的連結追蹤處理進度。
+      no_categories: 目前還沒有已發佈的文章。
     common:
       home: 首頁
       last_updated_on: 最後更新於 %{last_updated_on}
@@ -560,17 +567,23 @@ zh_TW:
       description: 請聯繫網站管理員以取得更多資訊。
       action: 如果您是管理員，請升級您的方案以恢復存取權限。
     tickets:
-      back_to_home: 回到首頁
       nav:
         submit_a_ticket: 提交工單
         my_tickets: 我的工單
       fields:
         name: 姓名
+        name_placeholder: 您的姓名
         email: 電子郵件
+        email_placeholder: you@company.com
         subject: 主旨
+        subject_placeholder: 簡短描述遇到的問題
         ticket_type: 類型
-        ticket_type_blank: 請選擇類型
         description: 我們可以如何協助您？
+        description_placeholder: 請告訴我們發生了什麼，以及您原本預期的結果。
+        attachments: 截圖或檔案
+        attachments_drop: 將檔案拖曳至此，或點擊上傳
+        attachments_hint: 'PNG、JPG、PDF、log · 最多 %{count} 個檔案，每個 %{size}'
+        attachments_remove: 移除檔案
       types:
         question: 諮詢
         issue: 問題
@@ -580,22 +593,32 @@ zh_TW:
         triage: 待處理
         in_progress: 處理中
         waiting: 等待中
+        waiting_customer: 等你回覆
         done: 已解決
         closed: 已結案
       errors:
         email: 請輸入有效的電子郵件地址。
         subject: 請填寫主旨。
+        ticket_type: 請選擇類型。
         description: 請描述您的需求。
+        attachments_count: '最多只能附上 %{count} 個檔案。'
+        attachment_size: '%{filename} 超過 %{size}。'
+        attachment_type: '%{filename} 不是支援的檔案格式。'
+        attachment_count_short: '超過 %{count} 個檔案上限'
+        attachment_size_short: '超過 %{size}'
+        attachment_type_short: 不支援的檔案格式
       new:
         title: 提交工單
         description: 請告訴我們您的需求，我們會以電子郵件回覆您。
         submit: 送出工單
+        already_have_a_ticket: 已經有工單了嗎？
         view_my_tickets: 查看我的工單
       created:
         title: 您的工單已建立
-        description: 我們已收到您的需求，將以電子郵件回覆您。
-        reference: 工單編號
+        reply_to: 我們已收到您的需求，將回覆至 %{email}。
+        reference_number: '工單 #%{number}'
         view_my_tickets: 查看我的工單
+        submit_another: 再提交一張工單
       access:
         title: 我的工單
         description: 請輸入您的電子郵件地址，我們會寄送查看工單的連結給您。
@@ -609,15 +632,17 @@ zh_TW:
         subject: '%{portal_name} 的工單存取連結'
       index:
         title: 我的工單
+        subtitle:
+          other: '%{count} 張工單 · %{email}'
         new_ticket: 提交工單
         empty: 您目前沒有任何工單。
-        updated_at: '更新於 %{time}'
+        updated_ago: '%{time}前更新'
       show:
         back_to_list: 返回我的工單
         created_at: '建立於 %{time}'
-        timeline: 對話紀錄
         no_messages: 這張工單目前還沒有訊息。
         you: 您
+        attachments: 附件
         reply_hint: 若要補充內容，請直接回覆我們寄給您的郵件。
   slack_unfurl:
     fields:

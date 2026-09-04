@@ -106,6 +106,48 @@ RSpec.describe Public::Api::V1::PortalsController, type: :request do
     end
   end
 
+  describe 'GET /public/api/v1/portals/{portal_slug}/{locale} layout variants' do
+    it 'renders the focused layout when the portal is configured for it' do
+      portal.update!(config: { allowed_locales: %w[en], default_locale: 'en', layout: 'focused' })
+
+      get "/hc/#{portal.slug}/en"
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include('data-layout="focused"')
+      expect(response.body).to include('search-wrap-hero')
+    end
+
+    it 'keeps rendering the classic layout when no layout is configured' do
+      portal.update!(config: { allowed_locales: %w[en], default_locale: 'en' })
+
+      get "/hc/#{portal.slug}/en"
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).not_to include('data-layout="focused"')
+      expect(response.body).to include('id="portal-bg"')
+    end
+
+    context 'when the focused portal has no published articles' do
+      let!(:web_widget) { create(:channel_widget, account: account) }
+
+      before do
+        account.enable_features!('tickets')
+        portal.articles.destroy_all
+        portal.update!(channel_web_widget: web_widget,
+                       config: { allowed_locales: %w[en], default_locale: 'en', layout: 'focused' })
+      end
+
+      it 'renders the ticket entry points instead of the search bar and categories' do
+        get "/hc/#{portal.slug}/en"
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include('data-testid="focused-action-submit"')
+        expect(response.body).to include('data-testid="focused-action-mine"')
+        expect(response.body).not_to include('search-wrap-hero')
+      end
+    end
+  end
+
   describe 'GET /public/api/v1/portals/{portal_slug}/{locale} recommended content' do
     let(:category_a) { create(:category, portal: portal, account: account, name: 'Getting Started', locale: 'en') }
     let(:category_b) { create(:category, portal: portal, account: account, name: 'Billing', locale: 'en') }

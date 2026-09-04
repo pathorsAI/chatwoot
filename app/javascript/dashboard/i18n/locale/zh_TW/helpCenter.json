@@ -961,6 +961,10 @@
           "SIDEBAR": {
             "TITLE": "Documentation",
             "DESCRIPTION": "Side-by-side navigation that keeps every guide a click away."
+          },
+          "FOCUSED": {
+            "TITLE": "專注",
+            "DESCRIPTION": "品牌感的 hero、快速開單入口與精簡的分類卡片。"
           }
         },
         "SOCIAL_LINKS": {

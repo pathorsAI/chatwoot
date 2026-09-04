@@ -2,27 +2,24 @@
   <title><%= I18n.t('public_portal.tickets.access.title') %> | <%= @portal.localized_value('name', @locale) %></title>
 <% end %>
 
-<% input_class = 'w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent' %>
+<div class="w-full max-w-[560px] mx-auto px-4 pt-10 pb-24">
+  <h1 class="text-2xl font-bold text-center text-zinc-900 dark:text-zinc-100"><%= I18n.t('public_portal.tickets.access.title') %></h1>
+  <p class="mt-2 text-xs text-center text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.tickets.access.description') %></p>
 
-<div class="w-full max-w-lg px-4 mx-auto md:px-8 py-10 md:py-14">
-  <h1 class="text-3xl font-semibold text-slate-900 dark:text-white"><%= I18n.t('public_portal.tickets.access.title') %></h1>
-  <p class="mt-2 text-slate-600 dark:text-slate-400"><%= I18n.t('public_portal.tickets.access.description') %></p>
-
-  <%= render 'public/api/v1/portals/tickets/field_error', message: @error %>
-
-  <form action="/hc/<%= @portal.slug %>/tickets/access" method="POST" class="flex flex-col gap-5 mt-8">
-    <div>
-      <label class="block mb-1.5 text-sm font-medium text-slate-800 dark:text-slate-200" for="access-email"><%= I18n.t('public_portal.tickets.fields.email') %></label>
-      <input class="<%= input_class %>" id="access-email" type="email" name="email" autocomplete="email" required>
+  <form action="/hc/<%= @portal.slug %>/tickets/access" method="POST" class="mt-6 space-y-6">
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100" for="access-email"><%= I18n.t('public_portal.tickets.fields.email') %></label>
+      <input class="w-full h-10 px-3 text-sm bg-white border border-solid rounded-md dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-n-portal focus:border-transparent <%= @error.present? ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800' %>"
+             id="access-email" type="email" name="email" placeholder="<%= I18n.t('public_portal.tickets.fields.email_placeholder') %>" autocomplete="email" required>
+      <%= render 'public/api/v1/portals/tickets/field_error', message: @error %>
     </div>
 
-    <div class="flex flex-wrap items-center gap-4">
-      <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white rounded-lg bg-slate-900 dark:bg-white dark:text-slate-900">
-        <%= I18n.t('public_portal.tickets.access.submit') %>
-      </button>
-      <a href="/hc/<%= @portal.slug %>/tickets/new" class="text-sm font-medium underline text-woot-500">
-        <%= I18n.t('public_portal.tickets.access.submit_a_ticket') %>
-      </a>
-    </div>
+    <button type="submit" class="w-full h-10 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-n-portal hover:opacity-90">
+      <%= I18n.t('public_portal.tickets.access.submit') %>
+    </button>
   </form>
+
+  <p class="mt-6 text-xs text-center text-zinc-500 dark:text-zinc-400">
+    <a href="/hc/<%= @portal.slug %>/tickets/new" class="font-medium text-n-portal"><%= I18n.t('public_portal.tickets.access.submit_a_ticket') %></a>
+  </p>
 </div>

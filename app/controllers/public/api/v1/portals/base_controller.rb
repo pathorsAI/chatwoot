@@ -7,7 +7,9 @@ class Public::Api::V1::Portals::BaseController < PublicController
   around_action :set_locale
   after_action :allow_iframe_requests
 
-  PORTAL_LAYOUTS = %w[classic documentation].freeze
+  PORTAL_LAYOUTS = %w[classic documentation focused].freeze
+  # Layouts that ship their own `+<variant>` templates. `classic` is the bare template set.
+  VARIANT_LAYOUTS = %w[documentation focused].freeze
 
   private
 
@@ -26,8 +28,8 @@ class Public::Api::V1::Portals::BaseController < PublicController
   def set_view_variant
     request.variant = if @is_plain_layout_enabled
                         :plain
-                      elsif @portal_layout == 'documentation'
-                        :documentation
+                      elsif VARIANT_LAYOUTS.include?(@portal_layout)
+                        @portal_layout.to_sym
                       end
   end
 
