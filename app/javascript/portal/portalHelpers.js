@@ -9,6 +9,10 @@ import PublicArticleSearch from './components/PublicArticleSearch.vue';
 import TableOfContents from './components/TableOfContents.vue';
 import SidebarThemeToggle from './components/SidebarThemeToggle.vue';
 import { initializeTheme } from './portalThemeHelper.js';
+import {
+  initializeTicketAttachments,
+  initializeTicketCounters,
+} from './ticketAttachments.js';
 import { getLanguageDirection } from 'dashboard/components/widgets/conversation/advancedFilterItems/languages.js';
 
 export const getHeadingsfromTheArticle = () => {
@@ -163,9 +167,15 @@ export const InitializationHelpers = {
 
   initializeThemesInPortal: initializeTheme,
 
+  initializeTicketForm: () => {
+    initializeTicketAttachments();
+    initializeTicketCounters();
+  },
+
   initialize: () => {
     openExternalLinksInNewTab();
     InitializationHelpers.setDirectionAttribute();
+    InitializationHelpers.initializeTicketForm();
     if (window.portalConfig.isPlainLayoutEnabled === 'true') {
       InitializationHelpers.appendPlainParamToURLs();
     } else {
