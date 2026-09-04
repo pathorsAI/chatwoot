@@ -508,6 +508,13 @@ zh_TW:
       primary_nav: Primary
     hero:
       sub_title: 在此搜尋文章或瀏覽以下分類。
+    focused:
+      nav_articles: 文章
+      hero_subtitle: 搜尋說明文件，或提交工單，我們會以電子郵件回覆。
+      hero_subtitle_tickets_only: 開一張工單，我們會透過 email 回覆你。
+      quick_submit_description: 問題、諮詢或需求，我們會以電子郵件回覆。
+      quick_mine_description: 用寄到您信箱的連結追蹤處理進度。
+      no_categories: 目前還沒有已發佈的文章。
     common:
       home: 首頁
       last_updated_on: 最後更新於 %{last_updated_on}

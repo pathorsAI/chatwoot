@@ -1,0 +1,33 @@
+<% content_for :head do %>
+  <%= render 'public/api/v1/portals/categories/meta_head',
+             category: @category, portal: @portal, locale: @locale, og_image_url: @og_image_url %>
+<% end %>
+
+<% articles = @category.articles.published.order(position: :asc) %>
+
+<div class="flex flex-col flex-grow w-full max-w-5xl px-4 py-10 mx-auto md:px-8">
+  <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100"><%= @category.name %></h1>
+  <% if @category.description.present? %>
+    <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400"><%= @category.description %></p>
+  <% end %>
+  <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+    <%= render 'public/api/v1/portals/article_count', article_count: articles.size %>
+  </p>
+
+  <div class="flex flex-col gap-3 mt-8">
+    <% if articles.empty? %>
+      <p class="text-sm text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.common.no_articles') %></p>
+    <% else %>
+      <% articles.each do |article| %>
+        <a href="<%= generate_article_link(@portal.slug, article.slug, @theme_from_params, false) %>"
+           class="block px-5 py-4 rounded-xl border border-solid border-zinc-200 dark:border-zinc-800 cursor-pointer transition-colors hover:border-n-portal">
+          <span class="block text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= article.title %></span>
+          <span class="block mt-1 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2"><%= render_category_content(article.content) %></span>
+          <span class="block mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <%= I18n.t('public_portal.common.last_updated_on', last_updated_on: article.updated_at.strftime('%b %d, %Y')) %>
+          </span>
+        </a>
+      <% end %>
+    <% end %>
+  </div>
+</div>

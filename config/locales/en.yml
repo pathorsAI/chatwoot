@@ -530,6 +530,13 @@ en:
       primary_nav: Primary
     hero:
       sub_title: Search for the articles here or browse the categories below.
+    focused:
+      nav_articles: Articles
+      hero_subtitle: Search the guides, or open a ticket and we will reply by email.
+      hero_subtitle_tickets_only: Open a ticket and we will get back to you by email.
+      quick_submit_description: Bug, question or request. We reply by email.
+      quick_mine_description: Track status with a link sent to your email.
+      no_categories: There are no published articles yet.
     common:
       home: Home
       last_updated_on: Last updated on %{last_updated_on}

@@ -1,0 +1,29 @@
+<% content_for :head do %>
+  <%= render 'public/api/v1/portals/articles/meta_head',
+             article: @article, portal: @portal, locale: @locale, og_image_url: @og_image_url %>
+<% end %>
+
+<article class="flex flex-col flex-grow w-full max-w-3xl px-4 py-10 mx-auto md:px-8">
+  <h1 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100"><%= @article.title %></h1>
+  <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+    <% if @article.author.present? %>
+      <%= I18n.t('public_portal.common.by') %> <%= @article.author.available_name %> &middot;
+    <% end %>
+    <%= I18n.t('public_portal.common.last_updated_on', last_updated_on: @article.updated_at.strftime('%b %d, %Y')) %>
+  </p>
+
+  <div class="mt-8">
+    <%= render 'public/api/v1/portals/articles/content',
+               parsed_content: @parsed_content,
+               link_class: 'prose-a:text-n-portal prose-a:no-underline hover:prose-a:underline' %>
+  </div>
+
+  <% if @article.category.present? %>
+    <footer class="pt-6 mt-12 border-t border-solid border-zinc-200 dark:border-zinc-800">
+      <a href="<%= generate_category_link(portal_slug: @portal.slug, category_locale: @article.category.locale, category_slug: @article.category.slug, theme: @theme_from_params, is_plain_layout_enabled: false) %>"
+         class="text-sm font-medium cursor-pointer transition-colors text-zinc-500 dark:text-zinc-400 hover:text-n-portal">
+        <%= I18n.t('public_portal.sidebar.back_to_category', name: @article.category.name) %>
+      </a>
+    </footer>
+  <% end %>
+</article>

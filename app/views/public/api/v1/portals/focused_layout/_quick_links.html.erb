@@ -1,0 +1,31 @@
+<%# locals: (portal:) %>
+<%
+  links = [
+    {
+      href: new_public_portal_ticket_path(portal.slug),
+      icon: 'i-lucide-plus',
+      title: I18n.t('public_portal.tickets.nav.submit_a_ticket'),
+      description: I18n.t('public_portal.focused.quick_submit_description')
+    },
+    {
+      href: public_portal_ticket_access_path(portal.slug),
+      icon: 'i-lucide-list',
+      title: I18n.t('public_portal.tickets.nav.my_tickets'),
+      description: I18n.t('public_portal.focused.quick_mine_description')
+    }
+  ]
+%>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  <% links.each do |link| %>
+    <a href="<%= link[:href] %>"
+       class="flex items-center gap-3 px-4 py-3.5 rounded-lg border border-solid border-zinc-200 dark:border-zinc-800 cursor-pointer transition-colors hover:border-n-portal">
+      <span class="flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-n-portal-soft text-n-portal">
+        <span class="<%= link[:icon] %> size-4 block" aria-hidden="true"></span>
+      </span>
+      <span class="min-w-0">
+        <span class="block text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= link[:title] %></span>
+        <span class="block text-xs text-zinc-500 dark:text-zinc-400"><%= link[:description] %></span>
+      </span>
+    </a>
+  <% end %>
+</div>

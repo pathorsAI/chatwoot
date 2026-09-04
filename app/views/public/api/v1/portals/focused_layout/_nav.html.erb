@@ -1,0 +1,120 @@
+<%# locals: (portal:, locale:) %>
+<%
+  home_path = generate_home_link(portal.slug, portal.config['default_locale'] || locale, @theme_from_params, false)
+  submit_path = new_public_portal_ticket_path(portal.slug)
+  tickets_path = public_portal_tickets_path(portal.slug)
+  current = if request.path == submit_path
+              :submit
+            elsif request.path.start_with?(tickets_path)
+              :mine
+            else
+              :articles
+            end
+  link_class = lambda do |active|
+    base = 'text-sm whitespace-nowrap transition-colors cursor-pointer'
+    active ? "#{base} font-semibold text-n-portal" : "#{base} font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+  end
+%>
+<header data-layout="focused" class="sticky top-0 z-50 w-full bg-white dark:bg-zinc-950 border-b border-solid border-zinc-200 dark:border-zinc-800">
+  <nav class="hidden sm:flex items-center justify-between gap-6 max-w-5xl mx-auto px-4 md:px-8 h-14" aria-label="Top">
+    <a href="<%= home_path %>" class="flex items-center min-w-0 gap-2 cursor-pointer">
+      <% if portal.logo.present? %>
+        <img src="<%= url_for(portal.logo) %>" class="w-auto h-6" draggable="false" />
+      <% else %>
+        <span class="text-base font-bold truncate text-zinc-900 dark:text-zinc-100"><%= portal.localized_value('name', locale) %></span>
+      <% end %>
+    </a>
+
+    <div class="flex items-center gap-5">
+      <% if portal_has_articles?(portal) %>
+        <a href="<%= home_path %>" class="<%= link_class.call(current == :articles) %>">
+          <%= I18n.t('public_portal.focused.nav_articles') %>
+        </a>
+      <% end %>
+
+      <%# Customer ticket entry: only shown when the portal is wired to a widget inbox %>
+      <% if portal_tickets_enabled?(portal) %>
+        <a href="<%= submit_path %>" class="<%= link_class.call(current == :submit) %>">
+          <%= I18n.t('public_portal.tickets.nav.submit_a_ticket') %>
+        </a>
+        <a href="<%= public_portal_ticket_access_path(portal.slug) %>" class="<%= link_class.call(current == :mine) %>">
+          <%= I18n.t('public_portal.tickets.nav.my_tickets') %>
+        </a>
+      <% end %>
+
+      <%# Appearance toggle section: ids and classes are the hooks portalThemeHelper.js binds to %>
+      <div class="relative">
+        <button id="toggle-appearance" type="button" class="flex flex-row items-center gap-1 text-sm font-medium transition-colors cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 stroke-zinc-500 dark:stroke-zinc-400">
+          <div data-theme="system" class="flex-row items-center gap-1 theme-button <%= @theme_from_params == 'system' ? 'flex' : 'hidden' %>">
+            <%= render partial: 'icons/monitor' %>
+          </div>
+          <div data-theme="light" class="flex-row items-center gap-1 theme-button <%= @theme_from_params == 'light' ? 'flex' : 'hidden' %>">
+            <%= render partial: 'icons/sun' %>
+          </div>
+          <div data-theme="dark" class="flex-row items-center gap-1 theme-button <%= @theme_from_params == 'dark' ? 'flex' : 'hidden' %>">
+            <%= render partial: 'icons/moon' %>
+          </div>
+          <span class="flex items-center pointer-events-none">
+            <%= render partial: 'icons/chevron-down' %>
+          </span>
+        </button>
+
+        <div id="appearance-dropdown"
+             data-current-theme="<%= @theme_from_params %>"
+             class="appearance-menu absolute hidden flex-col w-36 top-10 ltr:right-0 rtl:left-0 p-1 gap-0.5 bg-white dark:bg-zinc-950 border border-solid border-zinc-200 dark:border-zinc-800 rounded-md transition-opacity duration-150 opacity-0 data-[dropdown-open=true]:opacity-100 data-[dropdown-open=true]:flex"
+             aria-hidden="true"
+             data-dropdown="appearance-dropdown">
+          <% [
+               { theme: 'system', icon: 'icons/monitor', label: I18n.t('public_portal.header.appearance.system') },
+               { theme: 'light', icon: 'icons/sun', label: I18n.t('public_portal.header.appearance.light') },
+               { theme: 'dark', icon: 'icons/moon', label: I18n.t('public_portal.header.appearance.dark') }
+             ].each do |option| %>
+            <button type="button"
+                    data-theme="<%= option[:theme] %>"
+                    class="desktop-theme-button flex flex-row items-center justify-between gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-zinc-900 dark:text-zinc-100 stroke-zinc-500 dark:stroke-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+              <span class="flex flex-row items-center gap-2">
+                <%= render partial: option[:icon] %>
+                <span class="text-xs font-medium"><%= option[:label] %></span>
+              </span>
+              <span class="check-mark-icon <%= option[:theme] %>-theme">
+                <%= render partial: 'icons/check-mark' %>
+              </span>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Locale switcher section %>
+      <% if portal.public_locale_codes.length > 1 %>
+        <div class="flex items-center gap-1 stroke-zinc-500 dark:stroke-zinc-400 text-zinc-500 dark:text-zinc-400">
+          <%= render partial: 'icons/globe' %>
+          <select
+            data-portal-slug="<%= portal.slug %>"
+            class="w-24 overflow-hidden text-sm font-medium bg-transparent appearance-none cursor-pointer text-ellipsis whitespace-nowrap focus:outline-none locale-switcher"
+          >
+            <% if portal.draft_locale?(locale) %>
+              <option selected disabled value="<%= locale %>"><%= "#{language_name(locale)} (#{locale})" %></option>
+            <% end %>
+            <% portal.public_locale_codes.each do |code| %>
+              <option <%= code == locale ? 'selected' : '' %> value="<%= code %>"><%= "#{language_name(code)} (#{code})" %></option>
+            <% end %>
+          </select>
+          <%= render partial: 'icons/chevron-down' %>
+        </div>
+      <% end %>
+    </div>
+  </nav>
+
+  <nav class="flex sm:hidden items-center justify-between max-w-5xl mx-auto px-4 h-14" aria-label="Mobile Top">
+    <a href="<%= home_path %>" class="flex items-center min-w-0 gap-2 cursor-pointer">
+      <% if portal.logo.present? %>
+        <img src="<%= url_for(portal.logo) %>" class="w-auto h-6" draggable="false" />
+      <% else %>
+        <span class="text-base font-bold truncate text-zinc-900 dark:text-zinc-100"><%= portal.localized_value('name', locale) %></span>
+      <% end %>
+    </a>
+
+    <%= render partial: 'public/api/v1/portals/mobile_menu',
+               locals: { portal: portal, locale: locale, theme_from_params: @theme_from_params } %>
+  </nav>
+</header>

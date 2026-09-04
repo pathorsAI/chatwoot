@@ -1,0 +1,19 @@
+<%# locals: (portal:) %>
+<%# Ticket-only support center: the two entry points carry the page on their own. %>
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+  <a href="<%= new_public_portal_ticket_path(portal.slug) %>"
+     data-testid="focused-action-submit"
+     class="flex flex-col gap-2 p-6 rounded-lg cursor-pointer transition-colors bg-n-portal text-white hover:opacity-90">
+    <span class="i-lucide-plus size-6 block" aria-hidden="true"></span>
+    <span class="text-sm font-semibold"><%= I18n.t('public_portal.tickets.nav.submit_a_ticket') %></span>
+    <span class="text-xs text-white/80"><%= I18n.t('public_portal.focused.quick_submit_description') %></span>
+  </a>
+
+  <a href="<%= public_portal_ticket_access_path(portal.slug) %>"
+     data-testid="focused-action-mine"
+     class="flex flex-col gap-2 p-6 rounded-lg border border-solid cursor-pointer transition-colors border-zinc-200 dark:border-zinc-800 hover:border-n-portal">
+    <span class="i-lucide-list size-6 block text-n-portal" aria-hidden="true"></span>
+    <span class="text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= I18n.t('public_portal.tickets.nav.my_tickets') %></span>
+    <span class="text-xs text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.focused.quick_mine_description') %></span>
+  </a>
+</div>

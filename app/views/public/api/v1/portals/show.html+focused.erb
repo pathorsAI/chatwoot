@@ -1,0 +1,53 @@
+<% content_for :head do %>
+  <title><%= @portal.display_title(@locale) %></title>
+  <meta name="title" content="<%= @portal.display_title(@locale) %>">
+
+  <% if @og_image_url.present? %>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="og:image" content="<%= @og_image_url.html_safe %>">
+    <meta property="og:image" content="<%= @og_image_url.html_safe %>">
+    <meta name="twitter:image" content="<%= @og_image_url.html_safe %>">
+  <% end %>
+<% end %>
+
+<% has_articles = portal_has_articles?(@portal) %>
+
+<%= render 'public/api/v1/portals/focused_layout/hero',
+           portal: @portal,
+           title: @portal.localized_value('header_text', @locale).presence || @portal.localized_value('name', @locale),
+           subtitle: I18n.t(has_articles ? 'public_portal.focused.hero_subtitle' : 'public_portal.focused.hero_subtitle_tickets_only'),
+           show_search: has_articles %>
+
+<% if has_articles %>
+  <%
+    categories = @portal.categories
+                        .where(locale: @locale)
+                        .joins(:articles).where(articles: { status: :published })
+                        .order(position: :asc)
+                        .group('categories.id')
+                        .to_a
+  %>
+  <div class="flex flex-col flex-grow w-full max-w-5xl gap-6 px-4 py-8 mx-auto md:px-8">
+    <% if portal_tickets_enabled?(@portal) %>
+      <%= render 'public/api/v1/portals/focused_layout/quick_links', portal: @portal %>
+    <% end %>
+
+    <% if categories.empty? %>
+      <p class="text-sm text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.focused.no_categories') %></p>
+    <% else %>
+      <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <% categories.each do |category| %>
+          <%= render 'public/api/v1/portals/focused_layout/category_card', portal: @portal, category: category %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="flex flex-col flex-grow w-full max-w-[560px] px-4 py-10 mx-auto">
+    <% if portal_tickets_enabled?(@portal) %>
+      <%= render 'public/api/v1/portals/focused_layout/action_cards', portal: @portal %>
+    <% else %>
+      <p class="text-sm text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.focused.no_categories') %></p>
+    <% end %>
+  </div>
+<% end %>

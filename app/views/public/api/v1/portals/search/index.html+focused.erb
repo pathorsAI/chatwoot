@@ -1,0 +1,56 @@
+<% content_for :head do %>
+  <title><%= I18n.t('public_portal.search.results_for', query: @query) %> | <%= @portal.localized_value('name', @locale) %></title>
+<% end %>
+
+<% pagination_params = params.permit(:query, :locale, :theme, :show_plain_layout) %>
+
+<div class="flex flex-col flex-grow w-full max-w-5xl px-4 py-10 mx-auto md:px-8">
+  <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+    <%= I18n.t('public_portal.search.results_for', query: @query) %>
+  </h1>
+
+  <%= render 'public/api/v1/portals/search/form',
+             input_class: 'w-full h-10 px-3 text-sm rounded-md border border-solid border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-n-portal focus:border-transparent' %>
+
+  <%= render 'public/api/v1/portals/search/search_handler' %>
+
+  <% if @articles.empty? %>
+    <p class="text-sm text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.search.no_results', query: @query) %></p>
+  <% else %>
+    <p class="text-xs text-zinc-500 dark:text-zinc-400">
+      <%= I18n.t('public_portal.search.found_results', count: @articles.total_count) %>
+    </p>
+
+    <div class="flex flex-col gap-3 mt-4">
+      <% @articles.each do |article| %>
+        <a href="<%= generate_article_link(@portal.slug, article.slug, @theme_from_params, false) %>"
+           class="block px-5 py-4 rounded-xl border border-solid border-zinc-200 dark:border-zinc-800 cursor-pointer transition-colors hover:border-n-portal">
+          <span class="block text-sm font-semibold text-zinc-900 dark:text-zinc-100"><%= article.title %></span>
+          <span class="block mt-1 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2"><%= render_category_content(article.content) %></span>
+          <span class="block mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <% if article.category.present? %><%= article.category.name %> &middot; <% end %>
+            <%= I18n.t('public_portal.common.last_updated_on', last_updated_on: article.updated_at.strftime('%b %d, %Y')) %>
+          </span>
+        </a>
+      <% end %>
+    </div>
+
+    <% if @articles.respond_to?(:total_pages) && @articles.total_pages > 1 %>
+      <nav class="inline-flex self-center mt-6">
+        <% if @articles.prev_page %>
+          <a href="<%= url_for(pagination_params.merge(page: @articles.prev_page)) %>"
+             class="px-3 py-2 text-sm font-medium border border-solid rounded-s-md cursor-pointer border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
+            <%= I18n.t('public_portal.common.previous') %>
+          </a>
+        <% end %>
+
+        <% if @articles.next_page %>
+          <a href="<%= url_for(pagination_params.merge(page: @articles.next_page)) %>"
+             class="px-3 py-2 text-sm font-medium border border-solid rounded-e-md cursor-pointer border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
+            <%= I18n.t('public_portal.common.next') %>
+          </a>
+        <% end %>
+      </nav>
+    <% end %>
+  <% end %>
+</div>
