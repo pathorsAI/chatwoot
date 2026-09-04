@@ -8,7 +8,8 @@ class HookJob < MutexApplicationJob
     'dialogflow' => :process_dialogflow_integration,
     'google_translate' => :google_translate_integration,
     'leadsquared' => :process_leadsquared_integration_with_lock,
-    'linear' => :process_linear_integration
+    'linear' => :process_linear_integration,
+    'github' => :process_github_integration
   }.freeze
 
   def perform(hook, event_name, event_data = {})
@@ -62,6 +63,10 @@ class HookJob < MutexApplicationJob
 
     message = event_data[:message]
     Integrations::Linear::AutoLinkService.new(account: hook.account, message: message).perform
+  end
+
+  def process_github_integration(hook, event_name, event_data)
+    Integrations::Github::ProcessorService.new(hook: hook, event_name: event_name, event_data: event_data).perform
   end
 
   def process_leadsquared_integration_with_lock(hook, event_name, event_data)

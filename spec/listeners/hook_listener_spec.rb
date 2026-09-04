@@ -135,4 +135,28 @@ describe HookListener do
       end
     end
   end
+
+  describe '#ticket_created' do
+    let(:event_name) { 'message.created' }
+    let(:ticket) { create(:ticket, account: account, conversation: conversation) }
+    let(:ticket_event) { Events::Base.new('ticket.created', Time.zone.now, ticket: ticket) }
+
+    context 'when a github hook is enabled' do
+      it 'enqueues the hook job' do
+        hook = create(:integrations_hook, :github, account: account)
+        expect(HookJob).to receive(:perform_later).with(hook, 'ticket.created', { ticket: ticket }).once
+
+        listener.ticket_created(ticket_event)
+      end
+    end
+
+    context 'when the github hook is disabled' do
+      it 'does not enqueue the hook job' do
+        create(:integrations_hook, :github, account: account, status: 'disabled')
+        expect(HookJob).not_to receive(:perform_later)
+
+        listener.ticket_created(ticket_event)
+      end
+    end
+  end
 end

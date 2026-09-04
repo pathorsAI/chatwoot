@@ -34,6 +34,11 @@ class HookListener < BaseListener
     execute_account_hooks(event, conversation.account, conversation: conversation)
   end
 
+  def ticket_created(event)
+    ticket = event.data[:ticket]
+    execute_account_hooks(event, ticket.conversation.account, ticket: ticket)
+  end
+
   private
 
   def execute_hooks(event, message)
@@ -63,7 +68,8 @@ class HookListener < BaseListener
       'dialogflow' => ['message.created', 'message.updated'],
       'google_translate' => ['message.created'],
       'leadsquared' => ['contact.updated', 'conversation.created', 'conversation.resolved'],
-      'linear' => ['message.created']
+      'linear' => ['message.created'],
+      'github' => ['ticket.created']
     }
 
     return false unless supported_events_map.key?(hook.app_id)
