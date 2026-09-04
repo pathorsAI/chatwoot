@@ -29,8 +29,8 @@
     </div>
   <% else %>
     <%
-      input_class = 'w-full h-10 px-3 rounded-md border bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-n-portal focus:border-transparent'
-      textarea_class = 'w-full min-h-[96px] px-3 py-2 rounded-md border bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-n-portal focus:border-transparent'
+      input_class = 'w-full h-10 px-3 rounded-md border border-solid bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-n-portal focus:border-transparent'
+      textarea_class = 'w-full min-h-[96px] px-3 py-2 rounded-md border border-solid bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-n-portal focus:border-transparent'
       label_class = 'block text-sm font-medium text-zinc-900 dark:text-zinc-100'
       counter_class = 'text-xs text-zinc-500 dark:text-zinc-400'
       neutral_border = 'border-zinc-200 dark:border-zinc-800'
@@ -49,7 +49,7 @@
           <% @ticket_types.each do |ticket_type| %>
             <label class="relative block cursor-pointer">
               <input type="radio" name="ticket_type" value="<%= ticket_type %>" class="sr-only peer" <%= 'checked' if @submission[:ticket_type] == ticket_type %>>
-              <span class="flex flex-col items-center gap-1.5 rounded-lg border <%= @errors&.dig(:ticket_type) ? 'border-red-400' : neutral_border %> p-3 text-center text-xs font-medium text-zinc-900 dark:text-zinc-100 transition-colors peer-checked:border-n-portal peer-checked:bg-blue-50 dark:peer-checked:bg-sky-950">
+              <span class="flex flex-col items-center gap-1.5 rounded-lg border border-solid <%= @errors&.dig(:ticket_type) ? 'border-red-400' : neutral_border %> p-3 text-center text-xs font-medium text-zinc-900 dark:text-zinc-100 transition-colors peer-checked:border-n-portal peer-checked:bg-n-portal-faint ">
                 <svg class="w-5 h-5 text-zinc-500 dark:text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <% case ticket_type %>
                   <% when 'question' %>

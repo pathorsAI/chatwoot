@@ -1,7 +1,7 @@
 module PortalTicketsHelper
   STATUS_CATEGORY_CLASSES = {
-    'triage' => 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200',
-    'in_progress' => 'bg-blue-50 text-sky-700 dark:bg-sky-950 dark:text-sky-200',
+    'triage' => 'bg-n-amber-3 text-n-amber-11',
+    'in_progress' => 'bg-n-portal-faint text-n-portal',
     'waiting' => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
     'done' => 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-200',
     'closed' => 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'

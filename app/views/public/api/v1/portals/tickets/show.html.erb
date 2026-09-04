@@ -26,17 +26,17 @@
   <% if @messages.empty? %>
     <p class="mt-6 text-sm text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.tickets.show.no_messages') %></p>
   <% else %>
-    <ol class="mt-6 ml-2 border-l-2 border-zinc-200 dark:border-zinc-800 pl-5 space-y-4">
+    <ol class="mt-6 ml-2 border-l-2 border-solid border-zinc-200 dark:border-zinc-800 pl-5 space-y-4">
       <% @messages.each do |message| %>
         <li class="relative">
-          <span class="absolute -left-[26px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 <%= message.incoming? ? 'bg-n-portal' : 'bg-zinc-200 dark:bg-zinc-700' %>"></span>
+          <span class="absolute -left-[26px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-solid border-white dark:border-zinc-900 <%= message.incoming? ? 'bg-n-portal' : 'bg-zinc-200 dark:bg-zinc-700' %>"></span>
           <p class="mb-1 text-xs text-zinc-500 dark:text-zinc-400">
             <b class="font-semibold text-zinc-900 dark:text-zinc-100">
               <%= message.incoming? ? I18n.t('public_portal.tickets.show.you') : @portal.localized_value('name', @locale) %>
             </b>
             · <%= l(message.created_at, format: :short) %>
           </p>
-          <div class="px-3 py-2.5 text-sm border rounded-lg whitespace-pre-line <%= message.incoming? ? 'bg-blue-50 dark:bg-sky-950 border-blue-100 dark:border-sky-900 text-zinc-900 dark:text-zinc-100' : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100' %>">
+          <div class="px-3 py-2.5 text-sm border border-solid rounded-lg whitespace-pre-line <%= message.incoming? ? 'bg-n-portal-faint  border-n-portal-soft  text-zinc-900 dark:text-zinc-100' : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100' %>">
             <%= message.content %>
           </div>
 
@@ -45,10 +45,10 @@
               <% message.attachments.each do |attachment| %>
                 <% if attachment.image? && attachment.thumb_url.present? %>
                   <a href="<%= attachment.file_url %>" target="_blank" rel="noopener noreferrer">
-                    <img src="<%= attachment.thumb_url %>" alt="<%= attachment.file.filename %>" class="object-cover border rounded-md h-14 w-20 border-zinc-200 dark:border-zinc-800">
+                    <img src="<%= attachment.thumb_url %>" alt="<%= attachment.file.filename %>" class="object-cover border border-solid rounded-md h-14 w-20 border-zinc-200 dark:border-zinc-800">
                   </a>
                 <% else %>
-                  <a href="<%= attachment.download_url %>" class="inline-flex items-center h-9 gap-1.5 px-3 text-xs border rounded-md border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                  <a href="<%= attachment.download_url %>" class="inline-flex items-center h-9 gap-1.5 px-3 text-xs border border-solid rounded-md border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800">
                     <svg class="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M21.4 11.1 12.3 20.2a5 5 0 0 1-7.1-7.1l9.2-9.2a3.3 3.3 0 0 1 4.7 4.7l-9.1 9.2a1.7 1.7 0 0 1-2.4-2.4l8.5-8.4" />
                     </svg>

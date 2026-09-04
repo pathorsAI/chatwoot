@@ -31,7 +31,7 @@ const buildThumbnail = entry => {
     image.src = entry.previewUrl;
     image.alt = '';
     image.className =
-      'w-9 h-9 rounded object-cover border border-zinc-200 dark:border-zinc-800 flex-shrink-0';
+      'w-9 h-9 rounded object-cover border border-solid border-zinc-200 dark:border-zinc-800 flex-shrink-0';
     return image;
   }
 
@@ -44,7 +44,7 @@ const buildThumbnail = entry => {
 
 const buildRow = (file, extraClass) => {
   const row = document.createElement('li');
-  row.className = `flex items-center gap-2.5 px-2.5 py-1.5 text-xs border rounded-md ${extraClass}`;
+  row.className = `flex items-center gap-2.5 px-2.5 py-1.5 text-xs border border-solid rounded-md ${extraClass}`;
 
   const name = document.createElement('span');
   name.className = 'flex-1 truncate text-zinc-900 dark:text-zinc-100';
