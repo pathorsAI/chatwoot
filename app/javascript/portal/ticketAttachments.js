@@ -172,14 +172,14 @@ export const initializeTicketAttachments = () => {
   ['dragenter', 'dragover'].forEach(name =>
     dropzone.addEventListener(name, event => {
       event.preventDefault();
-      dropzone.classList.add('border-portal');
+      dropzone.classList.add('border-n-portal');
     })
   );
 
   ['dragleave', 'drop'].forEach(name =>
     dropzone.addEventListener(name, event => {
       event.preventDefault();
-      dropzone.classList.remove('border-portal');
+      dropzone.classList.remove('border-n-portal');
     })
   );
 

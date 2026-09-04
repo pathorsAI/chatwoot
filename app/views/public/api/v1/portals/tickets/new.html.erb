@@ -19,7 +19,7 @@
       </p>
 
       <div class="max-w-[280px] mx-auto mt-6 space-y-2.5">
-        <a href="/hc/<%= @portal.slug %>/tickets" class="flex items-center justify-center w-full h-10 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-portal hover:opacity-90">
+        <a href="/hc/<%= @portal.slug %>/tickets" class="flex items-center justify-center w-full h-10 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-n-portal hover:opacity-90">
           <%= I18n.t('public_portal.tickets.created.view_my_tickets') %>
         </a>
         <a href="/hc/<%= @portal.slug %>/tickets/new" class="flex items-center justify-center w-full h-10 text-sm font-medium transition-colors rounded-md cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:opacity-90">
@@ -29,8 +29,8 @@
     </div>
   <% else %>
     <%
-      input_class = 'w-full h-10 px-3 rounded-md border bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-portal focus:border-transparent'
-      textarea_class = 'w-full min-h-[96px] px-3 py-2 rounded-md border bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-portal focus:border-transparent'
+      input_class = 'w-full h-10 px-3 rounded-md border bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-n-portal focus:border-transparent'
+      textarea_class = 'w-full min-h-[96px] px-3 py-2 rounded-md border bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-n-portal focus:border-transparent'
       label_class = 'block text-sm font-medium text-zinc-900 dark:text-zinc-100'
       counter_class = 'text-xs text-zinc-500 dark:text-zinc-400'
       neutral_border = 'border-zinc-200 dark:border-zinc-800'
@@ -49,7 +49,7 @@
           <% @ticket_types.each do |ticket_type| %>
             <label class="relative block cursor-pointer">
               <input type="radio" name="ticket_type" value="<%= ticket_type %>" class="sr-only peer" <%= 'checked' if @submission[:ticket_type] == ticket_type %>>
-              <span class="flex flex-col items-center gap-1.5 rounded-lg border <%= @errors&.dig(:ticket_type) ? 'border-red-400' : neutral_border %> p-3 text-center text-xs font-medium text-zinc-900 dark:text-zinc-100 transition-colors peer-checked:border-portal peer-checked:bg-blue-50 dark:peer-checked:bg-sky-950">
+              <span class="flex flex-col items-center gap-1.5 rounded-lg border <%= @errors&.dig(:ticket_type) ? 'border-red-400' : neutral_border %> p-3 text-center text-xs font-medium text-zinc-900 dark:text-zinc-100 transition-colors peer-checked:border-n-portal peer-checked:bg-blue-50 dark:peer-checked:bg-sky-950">
                 <svg class="w-5 h-5 text-zinc-500 dark:text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <% case ticket_type %>
                   <% when 'question' %>
@@ -72,7 +72,7 @@
                 </svg>
                 <%= I18n.t("public_portal.tickets.types.#{ticket_type}") %>
               </span>
-              <svg class="absolute hidden w-3.5 h-3.5 top-1.5 right-1.5 text-portal peer-checked:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg class="absolute hidden w-3.5 h-3.5 top-1.5 right-1.5 text-n-portal peer-checked:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="m4 12 5.5 5.5L20 7" />
               </svg>
             </label>
@@ -152,14 +152,14 @@
         <%= render 'public/api/v1/portals/tickets/field_error', message: @errors&.dig(:attachments) %>
       </div>
 
-      <button type="submit" class="w-full h-10 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-portal hover:opacity-90 disabled:opacity-50">
+      <button type="submit" class="w-full h-10 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-n-portal hover:opacity-90 disabled:opacity-50">
         <%= I18n.t('public_portal.tickets.new.submit') %>
       </button>
     </form>
 
     <p class="mt-6 text-xs text-center text-zinc-500 dark:text-zinc-400">
       <%= I18n.t('public_portal.tickets.new.already_have_a_ticket') %>
-      <a href="/hc/<%= @portal.slug %>/tickets/access" class="font-medium text-portal"><%= I18n.t('public_portal.tickets.new.view_my_tickets') %></a>
+      <a href="/hc/<%= @portal.slug %>/tickets/access" class="font-medium text-n-portal"><%= I18n.t('public_portal.tickets.new.view_my_tickets') %></a>
     </p>
   <% end %>
 </div>
