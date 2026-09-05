@@ -196,7 +196,11 @@ Rails.application.routes.draw do
             end
           end
 
-          resources :tickets, only: [:index]
+          resources :tickets, only: [:index] do
+            collection do
+              get :counts
+            end
+          end
 
           resources :search, only: [:index] do
             collection do

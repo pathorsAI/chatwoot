@@ -38,6 +38,15 @@ RSpec.describe 'Tickets API', type: :request do
     conversation.update!(status: :resolved)
     create(:ticket, account: account, conversation: conversation, closed_at: Time.current)
   end
+  # Waiting on the customer, and the last word on the case is still ours. The
+  # counterpart — the customer having answered — is `waiting_ticket` plus an
+  # incoming message, built per example.
+  let(:awaiting_customer_ticket) do
+    ticket = create(:ticket, account: account, waiting_on: :customer, conversation: create(:conversation, account: account, assignee: agent))
+    create(:message, account: account, conversation: ticket.conversation, message_type: :incoming)
+    create(:message, account: account, conversation: ticket.conversation, message_type: :outgoing)
+    ticket
+  end
 
   describe 'GET /api/v1/accounts/{account.id}/tickets' do
     context 'when it is an unauthenticated user' do
@@ -189,6 +198,15 @@ RSpec.describe 'Tickets API', type: :request do
         expect(response.parsed_body['payload'].pluck('id')).to eq([triage_ticket.id])
       end
 
+      it 'filters the tickets the customer has replied to' do
+        create(:message, account: account, conversation: waiting_ticket.conversation, message_type: :incoming)
+        awaiting_customer_ticket
+
+        get url, params: { customer_replied: true }, headers: agent.create_new_auth_token, as: :json
+
+        expect(response.parsed_body['payload'].pluck('id')).to eq([waiting_ticket.id])
+      end
+
       it 'paginates the results' do
         stub_const('Api::V1::Accounts::TicketsController::RESULTS_PER_PAGE', 1)
         triage_ticket
@@ -199,6 +217,56 @@ RSpec.describe 'Tickets API', type: :request do
         expect(response.parsed_body['meta']['count']).to eq(2)
         expect(response.parsed_body['meta']['current_page']).to eq(2)
         expect(response.parsed_body['payload'].size).to eq(1)
+      end
+    end
+  end
+
+  describe 'GET /api/v1/accounts/{account.id}/tickets/counts' do
+    context 'when it is an unauthenticated user' do
+      it 'returns unauthorized' do
+        get "#{url}/counts", as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context 'when it is an authenticated agent' do
+      it 'counts the unsettled tickets by what needs a human next' do
+        triage_ticket.update!(due_at: 1.day.ago)
+        in_progress_ticket
+        create(:message, account: account, conversation: waiting_ticket.conversation, message_type: :incoming)
+        awaiting_customer_ticket
+        done_ticket
+
+        get "#{url}/counts", headers: agent.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body).to eq(
+          'triage' => 1,
+          'overdue' => 1,
+          'mine' => 3,
+          'customer_replied' => 1,
+          'waiting_customer' => 2,
+          'all' => 4
+        )
+      end
+
+      it 'counts only the tickets of the current account' do
+        triage_ticket
+        create(:ticket)
+
+        get "#{url}/counts", headers: agent.create_new_auth_token, as: :json
+
+        expect(response.parsed_body['all']).to eq(1)
+      end
+
+      it 'counts assignments against the requesting agent' do
+        in_progress_ticket
+        other_agent = create(:user, account: account, role: :agent)
+
+        get "#{url}/counts", headers: other_agent.create_new_auth_token, as: :json
+
+        expect(response.parsed_body['mine']).to eq(0)
       end
     end
   end

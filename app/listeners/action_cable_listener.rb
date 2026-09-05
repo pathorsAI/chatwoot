@@ -175,6 +175,16 @@ class ActionCableListener < BaseListener
     broadcast(account, [account_token(account)], CONTACT_DELETED, contact_data)
   end
 
+  # Ticket rows drive the sidebar badges and the attention strip, and both are
+  # counted server-side, so the payload only has to name the case that moved.
+  def ticket_created(event)
+    broadcast_ticket(event, TICKET_CREATED)
+  end
+
+  def ticket_updated(event)
+    broadcast_ticket(event, TICKET_UPDATED)
+  end
+
   def conversation_mentioned(event)
     conversation, account = extract_conversation_and_account(event)
     user = event.data[:user]
@@ -183,6 +193,14 @@ class ActionCableListener < BaseListener
   end
 
   private
+
+  def broadcast_ticket(event, event_name)
+    ticket = event.data[:ticket]
+    conversation = ticket.conversation
+    tokens = user_tokens(ticket.account, conversation.inbox.members)
+
+    broadcast(ticket.account, tokens, event_name, { conversation_id: conversation.display_id })
+  end
 
   def account_token(account)
     "account_#{account.id}"

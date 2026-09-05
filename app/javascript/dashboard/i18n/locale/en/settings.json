@@ -433,6 +433,9 @@
       "CONVERSATIONS": "Conversation rules",
       "INTEGRATIONS": "Integrations & data"
     },
+    "ATTENTION": {
+      "UNASSIGNED": "{count} conversations waiting for an agent"
+    },
     "TICKET_VIEWS": {
       "ALL": "All tickets",
       "MINE": "My tickets",

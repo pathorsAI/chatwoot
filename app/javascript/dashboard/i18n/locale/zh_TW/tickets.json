@@ -21,6 +21,22 @@
       "INTERNAL": "等待內部",
       "EXTERNAL": "等待外部"
     },
+    "ATTENTION": {
+      "TITLE": "待處理",
+      "TRIAGE": "待分派",
+      "OVERDUE": "逾期",
+      "CUSTOMER_REPLIED": "客戶已回覆",
+      "MINE": "我的",
+      "WAITING_CUSTOMER": "等待客戶",
+      "TOOLTIP": {
+        "TRIAGE": "有 {count} 張工單還沒有人接手",
+        "OVERDUE": "有 {count} 張工單已經逾期",
+        "CUSTOMER_REPLIED": "有 {count} 張工單客戶已經回覆",
+        "MINE": "有 {count} 張工單指派給你",
+        "WAITING_CUSTOMER": "有 {count} 張工單正在等客戶回覆",
+        "ALL": "有 {count} 張工單尚未結案"
+      }
+    },
     "FILTERS": {
       "ALL": "全部",
       "TYPE": "類型",

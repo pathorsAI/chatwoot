@@ -21,6 +21,22 @@
       "INTERNAL": "Internal",
       "EXTERNAL": "External"
     },
+    "ATTENTION": {
+      "TITLE": "Needs attention",
+      "TRIAGE": "Triage",
+      "OVERDUE": "Overdue",
+      "CUSTOMER_REPLIED": "Customer replied",
+      "MINE": "Mine",
+      "WAITING_CUSTOMER": "Waiting on customer",
+      "TOOLTIP": {
+        "TRIAGE": "{count} tickets waiting for an agent to pick them up",
+        "OVERDUE": "{count} tickets past their due date",
+        "CUSTOMER_REPLIED": "{count} tickets where the customer has replied",
+        "MINE": "{count} tickets assigned to you",
+        "WAITING_CUSTOMER": "{count} tickets waiting on the customer",
+        "ALL": "{count} tickets still open"
+      }
+    },
     "FILTERS": {
       "ALL": "All",
       "TYPE": "Type",

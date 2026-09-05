@@ -36,3 +36,34 @@ export const TICKET_TASK_STATUS = {
 };
 
 export const TICKETS_PER_PAGE = 25;
+
+// The attention strip: the slices of the queue that are asking for someone,
+// ordered by how loudly. Colour follows the sidebar badges — blue is unowned
+// work, ruby is late work, slate is context.
+export const TICKET_ATTENTION_CHIPS = [
+  {
+    key: 'triage',
+    i18nKey: 'TRIAGE',
+    color: 'blue',
+    inactiveVariant: 'outline',
+  },
+  {
+    key: 'overdue',
+    i18nKey: 'OVERDUE',
+    color: 'ruby',
+    inactiveVariant: 'outline',
+  },
+  {
+    key: 'customerReplied',
+    i18nKey: 'CUSTOMER_REPLIED',
+    color: 'slate',
+    inactiveVariant: 'outline',
+  },
+  { key: 'mine', i18nKey: 'MINE', color: 'slate', inactiveVariant: 'outline' },
+  {
+    key: 'waitingCustomer',
+    i18nKey: 'WAITING_CUSTOMER',
+    color: 'slate',
+    inactiveVariant: 'ghost',
+  },
+];

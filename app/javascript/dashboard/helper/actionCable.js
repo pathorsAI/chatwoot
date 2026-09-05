@@ -64,6 +64,8 @@ class ActionCableConnector extends BaseActionCableConnector {
       'voice_call.outbound_connected': this.onVoiceCallOutboundConnected,
       'voice_call.outbound_accepted': this.onVoiceCallOutboundAccepted,
       'voice_call.ended': this.onVoiceCallEnded,
+      'ticket.created': this.refreshTicketCounts,
+      'ticket.updated': this.refreshTicketCounts,
     };
   }
 
@@ -109,11 +111,13 @@ class ActionCableConnector extends BaseActionCableConnector {
       this.app.$store.dispatch('updateConversation', payload);
     }
     this.fetchConversationStats();
+    this.refreshTicketCounts();
   };
 
   onConversationCreated = data => {
     this.app.$store.dispatch('addConversation', data);
     this.fetchConversationStats();
+    this.refreshTicketCounts();
   };
 
   onConversationRead = data => {
@@ -142,11 +146,13 @@ class ActionCableConnector extends BaseActionCableConnector {
   onStatusChange = data => {
     this.app.$store.dispatch('updateConversation', data);
     this.fetchConversationStats();
+    this.refreshTicketCounts();
   };
 
   onConversationUpdated = data => {
     this.app.$store.dispatch('updateConversation', data);
     this.fetchConversationStats();
+    this.refreshTicketCounts();
   };
 
   onConversationUnreadCountChanged = () => {
@@ -236,6 +242,18 @@ class ActionCableConnector extends BaseActionCableConnector {
 
     this.lastUnreadCountsFetchAt = Date.now();
     this.app.$store.dispatch('conversationUnreadCounts/get');
+  };
+
+  // Triage, overdue and "the customer replied" all move on conversation events
+  // as much as on ticket ones, so the sidebar counts follow both.
+  refreshTicketCounts = () => {
+    const accountId = this.app.$store.getters.getCurrentAccountId;
+    const isFeatureEnabled =
+      this.app.$store.getters['accounts/isFeatureEnabledonAccount'];
+
+    if (!isFeatureEnabled?.(accountId, FEATURE_FLAGS.TICKETS)) return;
+
+    this.app.$store.dispatch('ticketCounts/refresh');
   };
 
   isConversationUnreadCountsEnabled = () => {

@@ -429,6 +429,9 @@
       "CONVERSATIONS": "對話規則",
       "INTEGRATIONS": "整合與資料"
     },
+    "ATTENTION": {
+      "UNASSIGNED": "有 {count} 則對話還沒有人接手"
+    },
     "TICKET_VIEWS": {
       "ALL": "全部工單",
       "MINE": "我的工單",
