@@ -8,9 +8,15 @@ class Email::SenderTriageService
   BYPASS_LISTS = %w[vip allowed].freeze
 
   # Local parts that only ever send machine-generated mail. `no-reply` variants are
-  # matched after a separator too (`comments-noreply@`), but daemon addresses must be
-  # exact so VERP-style `bounce+token@` senders from real systems are left alone.
-  NOTIFICATION_SENDER_PATTERN = /\A(?:mailer-daemon|postmaster)\z|(?:\A|[-._+])(?:no[-._]?reply|do[-._]?not[-._]?reply)/i
+  # matched after a separator too (`comments-noreply@`), and so are the other machine
+  # mailboxes banks and SaaS tools send from (`b2b_replyto@`, `notifications@`,
+  # `alerts@`). Daemon addresses must be exact so VERP-style `bounce+token@` senders
+  # from real systems are left alone.
+  NOTIFICATION_SENDER_PATTERN = /
+    \A(?:mailer-daemon|postmaster)\z
+    |(?:\A|[-._+])(?:no[-._]?reply|do[-._]?not[-._]?reply)
+    |(?:\A|[-._+])(?:reply[-._]?to|notifications?|notify|alerts?|mailer|automated)(?=\z|[-._+\d])
+  /xi
 
   pattr_initialize [:account!, :channel!, :processed_mail!, :sender_email!]
 
