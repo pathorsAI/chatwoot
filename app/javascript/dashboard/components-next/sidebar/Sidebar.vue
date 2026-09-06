@@ -1,5 +1,5 @@
 <script setup>
-import { h, ref, computed, onMounted, watch } from 'vue';
+import { h, ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   provideSidebarContext,
@@ -10,11 +10,13 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import { useConfig } from 'dashboard/composables/useConfig';
 import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
+import { useEmitter } from 'dashboard/composables/emitter';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
 import { vOnClickOutside } from '@vueuse/components';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
+import wootConstants from 'dashboard/constants/globals';
 import { useWindowSize, useEventListener } from '@vueuse/core';
 
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -259,6 +261,8 @@ const unattendedUnreadCount = useMapGetter(
 const getFolderUnreadCount = useMapGetter(
   'conversationUnreadCounts/getFolderUnreadCount'
 );
+const conversationStats = useMapGetter('conversationStats/getStats');
+const ticketCounts = useMapGetter('ticketCounts/getCounts');
 const teams = useMapGetter('teams/getMyTeams');
 const contactCustomViews = useMapGetter('customViews/getContactCustomViews');
 const conversationCustomViews = useMapGetter(
@@ -268,6 +272,18 @@ const getSidebarSectionSort = useMapGetter(
   'sidebarSortPreferences/getSectionSort'
 );
 
+// The badges have to be right on any page, not just the conversation list, so
+// the counts are seeded here rather than waiting for a list view to mount.
+const TICKET_COUNTS_POLL_MS = 60000;
+let ticketCountsPollTimer = null;
+
+// Waits on the feature flag: the account (and with it `hasTickets`) resolves
+// after the sidebar mounts, so an unguarded call on mount fetches nothing.
+const fetchTicketCounts = () => {
+  if (!hasTickets.value) return;
+  store.dispatch('ticketCounts/fetch');
+};
+
 onMounted(() => {
   store.dispatch('labels/get');
   store.dispatch('inboxes/get');
@@ -276,7 +292,24 @@ onMounted(() => {
   store.dispatch('attributes/get');
   store.dispatch('customViews/get', 'conversation');
   store.dispatch('customViews/get', 'contact');
+  store.dispatch('conversationStats/get', {});
+  // Realtime events cover the common case; this is the backstop for a tab that
+  // has been sitting on a page nothing broadcasts to.
+  ticketCountsPollTimer = setInterval(fetchTicketCounts, TICKET_COUNTS_POLL_MS);
 });
+
+onUnmounted(() => {
+  clearInterval(ticketCountsPollTimer);
+});
+
+// The conversation list, when it is mounted, re-dispatches this with its own
+// filters right after us and wins; without it the unassigned badge would only
+// move while the agent is sitting on the conversation list.
+useEmitter('fetch_conversation_stats', () => {
+  store.dispatch('conversationStats/get', {});
+});
+
+watch([accountId, hasTickets], fetchTicketCounts, { immediate: true });
 
 watch([accountId, hasConversationUnreadCounts], fetchConversationUnreadCounts, {
   immediate: true,
@@ -480,6 +513,17 @@ const menuItems = computed(() => {
       name: 'Conversation',
       label: t('SIDEBAR.CONVERSATIONS'),
       icon: 'i-lucide-message-circle',
+      // Unread is My Inbox's job; this number is the one nobody owns yet.
+      badgeCount: conversationStats.value.unAssignedCount,
+      badgeTone: 'attention',
+      badgeTitle: t('SIDEBAR.ATTENTION.UNASSIGNED', {
+        count: conversationStats.value.unAssignedCount,
+      }),
+      badgeTo: accountScopedRoute(
+        'home',
+        {},
+        { assignee_type: wootConstants.ASSIGNEE_TYPE.UNASSIGNED }
+      ),
       children: [
         {
           name: 'All',
@@ -682,26 +726,18 @@ const menuItems = computed(() => {
             name: 'Tickets',
             label: t('SIDEBAR.TICKETS'),
             icon: 'i-lucide-square-check-big',
+            // Ordered by how loudly each view is asking for someone: nobody has
+            // picked it up, it is already late, it is yours, then the archive.
             children: [
-              {
-                name: 'All Tickets',
-                label: t('SIDEBAR.TICKET_VIEWS.ALL'),
-                icon: 'i-lucide-square-check-big',
-                to: accountScopedRoute('tickets_dashboard_index'),
-              },
-              {
-                name: 'My Tickets',
-                label: t('SIDEBAR.TICKET_VIEWS.MINE'),
-                icon: 'i-lucide-user-round-check',
-                to: {
-                  ...accountScopedRoute('tickets_dashboard_index'),
-                  query: { mine: 'true' },
-                },
-              },
               {
                 name: 'Triage Tickets',
                 label: t('SIDEBAR.TICKET_VIEWS.TRIAGE'),
                 icon: 'i-lucide-inbox',
+                badgeCount: ticketCounts.value.triage,
+                badgeTone: 'attention',
+                badgeTitle: t('TICKETS.ATTENTION.TOOLTIP.TRIAGE', {
+                  count: ticketCounts.value.triage,
+                }),
                 to: {
                   ...accountScopedRoute('tickets_dashboard_index'),
                   query: { status_category: 'triage' },
@@ -711,10 +747,39 @@ const menuItems = computed(() => {
                 name: 'Overdue Tickets',
                 label: t('SIDEBAR.TICKET_VIEWS.OVERDUE'),
                 icon: 'i-lucide-clock-alert',
+                badgeCount: ticketCounts.value.overdue,
+                badgeTone: 'danger',
+                badgeTitle: t('TICKETS.ATTENTION.TOOLTIP.OVERDUE', {
+                  count: ticketCounts.value.overdue,
+                }),
                 to: {
                   ...accountScopedRoute('tickets_dashboard_index'),
                   query: { overdue: 'true' },
                 },
+              },
+              {
+                name: 'My Tickets',
+                label: t('SIDEBAR.TICKET_VIEWS.MINE'),
+                icon: 'i-lucide-user-round-check',
+                badgeCount: ticketCounts.value.mine,
+                badgeTitle: t('TICKETS.ATTENTION.TOOLTIP.MINE', {
+                  count: ticketCounts.value.mine,
+                }),
+                to: {
+                  ...accountScopedRoute('tickets_dashboard_index'),
+                  query: { mine: 'true' },
+                },
+              },
+              {
+                name: 'All Tickets',
+                label: t('SIDEBAR.TICKET_VIEWS.ALL'),
+                icon: 'i-lucide-square-check-big',
+                badgeCount: ticketCounts.value.all,
+                badgeTone: 'muted',
+                badgeTitle: t('TICKETS.ATTENTION.TOOLTIP.ALL', {
+                  count: ticketCounts.value.all,
+                }),
+                to: accountScopedRoute('tickets_dashboard_index'),
               },
             ],
           },

@@ -72,7 +72,13 @@ const store = useStore();
 
 const resolveAttributesModalRef = ref(null);
 
-const activeAssigneeTab = ref(wootConstants.ASSIGNEE_TYPE.ME);
+// The sidebar's unassigned badge links here with the tab it counted, so a
+// shared or clicked link opens on the queue it promised.
+const activeAssigneeTab = ref(
+  Object.values(wootConstants.ASSIGNEE_TYPE).includes(route.query.assignee_type)
+    ? route.query.assignee_type
+    : wootConstants.ASSIGNEE_TYPE.ME
+);
 const activeStatus = ref(wootConstants.STATUS_TYPE.OPEN);
 const activeSortBy = ref(wootConstants.SORT_BY_TYPE.LAST_ACTIVITY_AT_DESC);
 const showAdvancedFilters = ref(false);

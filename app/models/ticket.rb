@@ -52,6 +52,16 @@ class Ticket < ApplicationRecord
     'in_progress' => "conversations.status NOT IN (:resolved, :snoozed) AND tickets.waiting_on = :waiting_none AND NOT (#{TRIAGE_CONDITION})"
   }.freeze
 
+  # The last thing said on the conversation, activity noise excluded, came from
+  # the customer. Correlated so a whole page of tickets stays one query.
+  CUSTOMER_REPLIED_CONDITION = <<~SQL.squish
+    tickets.waiting_on = :waiting_customer AND (
+      SELECT messages.message_type FROM messages
+      WHERE messages.conversation_id = conversations.id AND messages.message_type != :activity
+      ORDER BY messages.id DESC LIMIT 1
+    ) = :incoming
+  SQL
+
   belongs_to :account
   belongs_to :conversation
   belongs_to :created_by, class_name: 'User', optional: true
@@ -70,6 +80,17 @@ class Ticket < ApplicationRecord
   # Everything the team still owes the customer: `done` and `closed` are exactly
   # the categories a resolved conversation produces.
   scope :unsettled, -> { joins(:conversation).where.not(conversations: { status: Conversation.statuses[:resolved] }) }
+
+  # We are waiting on the customer, they answered, and nobody has replied since:
+  # the ball is back on our side even though the ticket still reads as waiting.
+  scope :customer_replied, lambda {
+    joins(:conversation).where(
+      CUSTOMER_REPLIED_CONDITION,
+      waiting_customer: WAITING_STATES[:customer],
+      activity: Message.message_types[:activity],
+      incoming: Message.message_types[:incoming]
+    )
+  }
 
   def self.with_status_category(category)
     return none unless STATUS_CATEGORIES.include?(category)

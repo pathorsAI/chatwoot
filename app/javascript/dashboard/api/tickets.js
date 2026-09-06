@@ -9,6 +9,10 @@ class TicketsAPI extends ApiClient {
   get(params = {}) {
     return axios.get(this.url, { params });
   }
+
+  counts() {
+    return axios.get(`${this.url}/counts`);
+  }
 }
 
 export default new TicketsAPI();

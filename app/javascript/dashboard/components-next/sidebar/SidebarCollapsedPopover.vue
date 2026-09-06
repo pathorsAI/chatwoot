@@ -197,7 +197,11 @@ onMounted(async () => {
                         class="size-4 flex-shrink-0"
                       />
                       <span class="flex-1 truncate">{{ subChild.label }}</span>
-                      <SidebarUnreadBadge :count="subChild.badgeCount" />
+                      <SidebarUnreadBadge
+                        :count="subChild.badgeCount"
+                        :tone="subChild.badgeTone ?? 'neutral'"
+                        :title="subChild.badgeTitle ?? ''"
+                      />
                     </button>
                   </li>
                 </ul>
@@ -220,7 +224,11 @@ onMounted(async () => {
                   class="size-4 flex-shrink-0"
                 />
                 <span class="flex-1 truncate">{{ child.label }}</span>
-                <SidebarUnreadBadge :count="child.badgeCount" />
+                <SidebarUnreadBadge
+                  :count="child.badgeCount"
+                  :tone="child.badgeTone ?? 'neutral'"
+                  :title="child.badgeTitle ?? ''"
+                />
               </button>
             </li>
           </template>

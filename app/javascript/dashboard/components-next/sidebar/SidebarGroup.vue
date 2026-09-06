@@ -9,6 +9,7 @@ import SidebarGroupLeaf from './SidebarGroupLeaf.vue';
 import SidebarSubGroup from './SidebarSubGroup.vue';
 import SidebarGroupEmptyLeaf from './SidebarGroupEmptyLeaf.vue';
 import SidebarCollapsedPopover from './SidebarCollapsedPopover.vue';
+import SidebarUnreadBadge from './SidebarUnreadBadge.vue';
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -18,6 +19,10 @@ const props = defineProps({
   activeOn: { type: Array, default: () => [] },
   children: { type: Array, default: undefined },
   getterKeys: { type: Object, default: () => ({}) },
+  badgeCount: { type: [Number, String], default: 0 },
+  badgeTone: { type: String, default: 'neutral' },
+  badgeTitle: { type: String, default: '' },
+  badgeTo: { type: Object, default: null },
 });
 
 const {
@@ -141,6 +146,23 @@ const isLastVisibleChild = child => {
   return lastChild === child;
 };
 
+// Folded — to an icon, or just with its children hidden — there is nowhere to
+// put per-child numbers, so the group carries what its children were
+// signalling: its own badge, or the sum of the children asking for action.
+const rolledUpBadgeCount = computed(() => {
+  if (props.badgeCount) return Number(props.badgeCount);
+
+  return (props.children || [])
+    .filter(
+      child => child.badgeTone === 'attention' || child.badgeTone === 'danger'
+    )
+    .reduce((total, child) => total + Number(child.badgeCount || 0), 0);
+});
+
+const rolledUpBadgeTone = computed(() =>
+  props.badgeCount ? props.badgeTone : 'attention'
+);
+
 const isActive = computed(() => {
   if (props.to) {
     if (route.path === resolvePath(props.to)) return true;
@@ -196,6 +218,10 @@ const activeChild = computed(() => {
 const hasActiveChild = computed(() => {
   return activeChild.value !== undefined;
 });
+
+const areChildrenVisible = computed(
+  () => !hasChildren.value || isExpanded.value || hasActiveChild.value
+);
 
 const handleCollapsedClick = () => {
   if (hasChildren.value && hasAccessibleChildren.value) {
@@ -272,6 +298,13 @@ watch(
           @click="hasChildren ? handleCollapsedClick() : undefined"
         >
           <Icon v-if="icon" :icon="icon" class="size-4" />
+          <SidebarUnreadBadge
+            v-if="rolledUpBadgeCount"
+            :count="rolledUpBadgeCount"
+            :tone="rolledUpBadgeTone"
+            :title="badgeTitle"
+            class="absolute -top-1 ltr:-right-1 rtl:-left-1"
+          />
         </component>
         <SidebarCollapsedPopover
           v-if="hasChildren && isPopoverOpen"
@@ -294,6 +327,10 @@ watch(
         :label
         :to
         :getter-keys="getterKeys"
+        :badge-count="areChildrenVisible ? badgeCount : rolledUpBadgeCount"
+        :badge-tone="areChildrenVisible ? badgeTone : rolledUpBadgeTone"
+        :badge-title="badgeTitle"
+        :badge-to="badgeTo"
         :is-active="isActive"
         :has-active-child="hasActiveChild"
         :expandable="hasChildren"

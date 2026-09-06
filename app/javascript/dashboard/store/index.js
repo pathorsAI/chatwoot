@@ -27,6 +27,7 @@ import conversationSearch from './modules/conversationSearch';
 import conversationStats from './modules/conversationStats';
 import conversationTypingStatus from './modules/conversationTypingStatus';
 import conversationUnreadCounts from './modules/conversationUnreadCounts';
+import ticketCounts from './modules/ticketCounts';
 import conversationWatchers from './modules/conversationWatchers';
 import csat from './modules/csat';
 import customRole from './modules/customRole';
@@ -96,6 +97,7 @@ export default createStore({
     conversationStats,
     conversationTypingStatus,
     conversationUnreadCounts,
+    ticketCounts,
     conversationWatchers,
     csat,
     customRole,

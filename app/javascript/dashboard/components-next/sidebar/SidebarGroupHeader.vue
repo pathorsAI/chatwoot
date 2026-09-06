@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useMapGetter } from 'dashboard/composables/store.js';
 import Icon from 'next/icon/Icon.vue';
+import SidebarUnreadBadge from './SidebarUnreadBadge.vue';
 
 const props = defineProps({
   to: { type: [Object, String], default: '' },
@@ -12,14 +13,21 @@ const props = defineProps({
   isActive: { type: Boolean, default: false },
   hasActiveChild: { type: Boolean, default: false },
   getterKeys: { type: Object, default: () => ({}) },
+  badgeCount: { type: [Number, String], default: 0 },
+  badgeTone: { type: String, default: 'neutral' },
+  badgeTitle: { type: String, default: '' },
+  badgeTo: { type: [Object, String], default: null },
 });
 
 const emit = defineEmits(['toggle']);
 
 const showBadge = useMapGetter(props.getterKeys.badge);
 const dynamicCount = useMapGetter(props.getterKeys.count);
+// An expandable group used to have no room for a number because its children
+// carry them. `badgeCount` is the exception: a group-level signal that has to
+// stay visible while the group is folded away.
 const count = computed(() =>
-  dynamicCount.value > 99 ? '99+' : dynamicCount.value
+  props.expandable ? props.badgeCount : dynamicCount.value
 );
 </script>
 
@@ -57,12 +65,19 @@ const count = computed(() =>
       >
         {{ label }}
       </span>
-      <span
-        v-if="dynamicCount && !expandable"
-        class="inline-grid h-5 min-w-5 place-items-center rounded-full bg-n-slate-4 px-1 text-xxs font-medium leading-3 text-n-slate-12 dark:bg-n-slate-5 flex-shrink-0"
+      <component
+        :is="badgeTo ? 'router-link' : 'span'"
+        v-if="count"
+        :to="badgeTo"
+        class="flex-shrink-0"
+        @click.stop
       >
-        {{ count }}
-      </span>
+        <SidebarUnreadBadge
+          :count="count"
+          :tone="badgeTone"
+          :title="badgeTitle"
+        />
+      </component>
     </div>
     <span
       v-if="expandable"
