@@ -157,6 +157,13 @@ RSpec.describe Portal do
       expect(portal.ticket_inbox).to eq(web_widget.inbox)
     end
 
+    it 'falls back to the widget inbox when the configured inbox is gone' do
+      portal.update!(config: { ticket_inbox_id: email_inbox.id })
+      email_inbox.destroy!
+
+      expect(portal.reload.ticket_inbox).to eq(web_widget.inbox)
+    end
+
     it 'rejects an inbox belonging to another account' do
       portal.config = { ticket_inbox_id: create(:channel_email, account: create(:account)).inbox.id }
 

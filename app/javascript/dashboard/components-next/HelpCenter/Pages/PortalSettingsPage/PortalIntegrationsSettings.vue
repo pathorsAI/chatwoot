@@ -140,14 +140,23 @@ const isEmailTicketInbox = computed(
 
 const resetFromPortal = () => {
   state.liveChatWidgetInboxId = props.activePortal?.inbox?.id || '';
-  state.ticketInboxId = props.activePortal?.config?.ticket_inbox_id ?? '';
+  // A configured inbox that is not selectable any more (deleted, or not loaded yet) loads
+  // as empty, so saving clears the stale id instead of failing validation on the backend.
+  const configuredTicketInboxId =
+    props.activePortal?.config?.ticket_inbox_id ?? '';
+  state.ticketInboxId = ticketInboxes.value.some(
+    inbox => inbox.id === configuredTicketInboxId
+  )
+    ? configuredTicketInboxId
+    : '';
   ANALYTICS_PROVIDERS.forEach(({ key }) => {
     state[key] = portalConfig.value.analytics?.[key] || '';
   });
   Object.assign(originalState, state);
 };
 
-watch(() => props.activePortal, resetFromPortal, {
+// Inboxes can arrive after the portal, so the ticket inbox is re-resolved when they do.
+watch([() => props.activePortal, ticketInboxes], resetFromPortal, {
   immediate: true,
   deep: true,
 });

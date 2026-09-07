@@ -101,18 +101,22 @@ class Public::Api::V1::Portals::TicketsController < Public::Api::V1::Portals::Ba
       contact_attributes: { name: @submission[:name].presence, email: @submission[:email] }
     ).perform
 
-    conversation = ::ConversationBuilder.new(params: conversation_params, contact_inbox: contact_inbox).perform
+    conversation = create_conversation(contact_inbox)
     create_description_message(conversation, contact_inbox.contact)
 
     conversation.create_ticket!(account_id: @portal.account_id, subject: @submission[:subject], ticket_type: @submission[:ticket_type])
   end
 
-  # ConversationReplyMailer sends `mail_subject` as the outbound subject, which is what
-  # keeps the customer's mail client threading their replies onto this conversation.
-  def conversation_params
-    return ActionController::Parameters.new unless ticket_inbox.email?
-
-    ActionController::Parameters.new(additional_attributes: { mail_subject: @submission[:subject] })
+  # ConversationBuilder is bypassed on purpose: on a `lock_to_single_conversation` inbox it
+  # hands back the contact's existing conversation, and since the email path reuses the
+  # contact inbox keyed by address, a second ticket would be appended to the first one's
+  # thread and then fail the unique index on tickets.conversation_id. Every ticket is its
+  # own conversation. `mail_subject` is what ConversationReplyMailer sends as the outbound
+  # subject, which keeps the customer's mail client threading replies onto this conversation.
+  def create_conversation(contact_inbox)
+    ::Conversation.create!(account_id: contact_inbox.inbox.account_id, inbox_id: contact_inbox.inbox_id,
+                           contact_id: contact_inbox.contact_id, contact_inbox_id: contact_inbox.id,
+                           additional_attributes: ticket_inbox.email? ? { 'mail_subject' => @submission[:subject] } : {})
   end
 
   def create_description_message(conversation, contact)
@@ -195,7 +199,8 @@ class Public::Api::V1::Portals::TicketsController < Public::Api::V1::Portals::Ba
     {
       name: permitted[:name].to_s.strip,
       email: permitted[:email].to_s.strip.downcase,
-      subject: permitted[:subject].to_s.strip,
+      # The subject goes out as an SMTP `Subject:` header, so line breaks are collapsed here.
+      subject: permitted[:subject].to_s.gsub(/[\r\n]+/, ' ').strip,
       ticket_type: Ticket::TYPES.include?(permitted[:ticket_type]) ? permitted[:ticket_type] : nil,
       description: permitted[:description].to_s.strip
     }

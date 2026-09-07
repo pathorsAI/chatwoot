@@ -67,6 +67,12 @@ RSpec.describe 'Public Portal Tickets', type: :request do
       expect(created_ticket.conversation.messages.last.content).to eq("**Cannot log in**\n\nIt keeps failing.")
     end
 
+    it 'strips line breaks out of the subject' do
+      post "/hc/#{portal.slug}/tickets", params: payload.merge(subject: "Cannot log in\r\nBcc: attacker@example.com")
+
+      expect(Ticket.last.subject).to eq('Cannot log in Bcc: attacker@example.com')
+    end
+
     it 'redirects back to the form with the reference in the flash' do
       post "/hc/#{portal.slug}/tickets", params: payload
 
@@ -186,6 +192,21 @@ RSpec.describe 'Public Portal Tickets', type: :request do
         expect { post "/hc/#{portal.slug}/tickets", params: payload }.not_to change(ContactInbox, :count)
 
         expect(Ticket.last.conversation.contact_inbox_id).to eq(existing_contact_inbox.id)
+      end
+
+      it 'creates a fresh conversation even when the inbox locks to a single conversation' do
+        email_inbox.update!(lock_to_single_conversation: true)
+        existing = create(:contact, account: account, email: 'jane@example.com')
+        existing_contact_inbox = create(:contact_inbox, contact: existing, inbox: email_inbox, source_id: 'jane@example.com')
+        existing_conversation = create(:conversation, account: account, inbox: email_inbox, contact: existing,
+                                                      contact_inbox: existing_contact_inbox)
+
+        expect { post "/hc/#{portal.slug}/tickets", params: payload }.to change(Ticket, :count).by(1)
+        expect { post "/hc/#{portal.slug}/tickets", params: payload }.to change(Ticket, :count).by(1)
+
+        expect(Ticket.count).to eq(2)
+        expect(Ticket.distinct.pluck(:conversation_id).size).to eq(2)
+        expect(existing_conversation.reload.ticket).to be_nil
       end
     end
   end
