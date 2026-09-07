@@ -645,6 +645,7 @@ Rails.application.routes.draw do
   get 'hc/:slug/tickets/new', to: 'public/api/v1/portals/tickets#new', as: :new_public_portal_ticket
   get 'hc/:slug/tickets/access', to: 'public/api/v1/portals/tickets#access', as: :public_portal_ticket_access
   post 'hc/:slug/tickets/access', to: 'public/api/v1/portals/tickets#send_access_link'
+  get 'hc/:slug/tickets/access/sent', to: 'public/api/v1/portals/tickets#access_sent', as: :public_portal_ticket_access_sent
   get 'hc/:slug/tickets/verify', to: 'public/api/v1/portals/tickets#verify', as: :public_portal_ticket_verify
   get 'hc/:slug/tickets', to: 'public/api/v1/portals/tickets#index', as: :public_portal_tickets
   post 'hc/:slug/tickets', to: 'public/api/v1/portals/tickets#create'

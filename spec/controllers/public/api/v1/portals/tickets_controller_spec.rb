@@ -161,14 +161,24 @@ RSpec.describe 'Public Portal Tickets', type: :request do
         post "/hc/#{portal.slug}/tickets/access", params: { email: contact.email }
       end.to have_enqueued_mail(PortalTicketAccessMailer, :access_link)
 
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include('Check your inbox')
+      # Turbo only renders form responses that redirect, so the confirmation lives on a GET page.
+      expect(response).to have_http_status(:see_other)
+      expect(response).to redirect_to("/hc/#{portal.slug}/tickets/access/sent")
     end
 
     it 'returns the same response without sending an email for an unknown address' do
       expect do
         post "/hc/#{portal.slug}/tickets/access", params: { email: 'nobody@example.com' }
       end.not_to have_enqueued_mail(PortalTicketAccessMailer, :access_link)
+
+      expect(response).to have_http_status(:see_other)
+      expect(response).to redirect_to("/hc/#{portal.slug}/tickets/access/sent")
+    end
+  end
+
+  describe 'GET /hc/:slug/tickets/access/sent' do
+    it 'renders the check-your-inbox confirmation' do
+      get "/hc/#{portal.slug}/tickets/access/sent"
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include('Check your inbox')
