@@ -64,7 +64,7 @@ RSpec.describe 'Public Portal Tickets', type: :request do
       expect(created_ticket.ticket_type).to eq('issue')
       expect(created_ticket.conversation.inbox_id).to eq(inbox.id)
       expect(created_ticket.conversation.contact.email).to eq('jane@example.com')
-      expect(created_ticket.conversation.messages.last.content).to eq('It keeps failing.')
+      expect(created_ticket.conversation.messages.last.content).to eq("**Cannot log in**\n\nIt keeps failing.")
     end
 
     it 'redirects back to the form with the reference in the flash' do
@@ -149,6 +149,43 @@ RSpec.describe 'Public Portal Tickets', type: :request do
         expect { post "/hc/#{portal.slug}/tickets", params: payload }.not_to change(Ticket, :count)
 
         expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context 'when the portal points at an email inbox' do
+      let(:email_inbox) { create(:channel_email, account: account).inbox }
+
+      before { portal.update!(config: { ticket_inbox_id: email_inbox.id }) }
+
+      it 'creates the conversation in the email inbox keyed by the email address' do
+        post "/hc/#{portal.slug}/tickets", params: payload
+
+        created_ticket = Ticket.last
+        expect(created_ticket.conversation.inbox_id).to eq(email_inbox.id)
+        expect(created_ticket.conversation.contact_inbox.source_id).to eq('jane@example.com')
+      end
+
+      it 'stores the subject as the mail subject the reply mailer sends on' do
+        post "/hc/#{portal.slug}/tickets", params: payload
+
+        expect(Ticket.last.conversation.additional_attributes['mail_subject']).to eq('Cannot log in')
+      end
+
+      it 'puts the subject in the email meta and leaves the body unprefixed' do
+        post "/hc/#{portal.slug}/tickets", params: payload
+
+        message = Ticket.last.conversation.messages.last
+        expect(message.content_attributes['email']['subject']).to eq('Cannot log in')
+        expect(message.content).to eq('It keeps failing.')
+      end
+
+      it 'reuses the contact inbox of an existing contact with the same email' do
+        existing = create(:contact, account: account, email: 'jane@example.com')
+        existing_contact_inbox = create(:contact_inbox, contact: existing, inbox: email_inbox, source_id: 'jane@example.com')
+
+        expect { post "/hc/#{portal.slug}/tickets", params: payload }.not_to change(ContactInbox, :count)
+
+        expect(Ticket.last.conversation.contact_inbox_id).to eq(existing_contact_inbox.id)
       end
     end
   end

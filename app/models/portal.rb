@@ -47,6 +47,7 @@ class Portal < ApplicationRecord
   before_validation :normalize_config
   validate :validate_config
   validate :validate_analytics
+  validate :validate_ticket_inbox
   validates_with JsonSchemaValidator,
                  schema: PortalConfigSchema::CONFIG_PARAMS_SCHEMA,
                  attribute_resolver: ->(record) { record.config }
@@ -67,7 +68,7 @@ class Portal < ApplicationRecord
 
   # TODO: 'website_token' is an unused reserved key; remove with a migration that scrubs it from existing portals' config
   CONFIG_JSON_KEYS = %w[allowed_locales default_locale draft_locales website_token social_profiles layout
-                        locale_translations popular_content analytics].freeze
+                        locale_translations popular_content analytics ticket_inbox_id].freeze
 
   def analytics
     value = config_value('analytics')
@@ -155,6 +156,16 @@ class Portal < ApplicationRecord
     config_value('social_profiles') || {}
   end
 
+  # Where tickets opened from the public portal land. An email inbox makes them
+  # email conversations, so agent replies leave over that inbox and the customer
+  # can answer by mail; the live chat widget inbox stays the default.
+  def ticket_inbox
+    inbox_id = config_value('ticket_inbox_id')
+    return account&.inboxes&.find_by(id: inbox_id) if inbox_id.present?
+
+    channel_web_widget&.inbox
+  end
+
   private
 
   def normalize_config
@@ -162,12 +173,36 @@ class Portal < ApplicationRecord
     config['allowed_locales'] = allowed_locale_codes
     config['default_locale'] = default_locale
     config['draft_locales'] = draft_locale_codes
+    normalize_ticket_inbox_id
+  end
+
+  # The merge above keeps whatever is already persisted, so clearing the inbox has
+  # to drop the key rather than merge a blank over it.
+  def normalize_ticket_inbox_id
+    return unless config.key?('ticket_inbox_id')
+
+    value = config['ticket_inbox_id']
+    if value.blank?
+      config.delete('ticket_inbox_id')
+    else
+      config['ticket_inbox_id'] = value.to_i
+    end
   end
 
   def validate_config
     denied_keys = config.keys - CONFIG_JSON_KEYS
     errors.add(:config, "in portal on #{denied_keys.join(',')} is not supported.") if denied_keys.any?
     errors.add(:config, 'default locale cannot be drafted.') if draft_locale?(default_locale)
+  end
+
+  def validate_ticket_inbox
+    inbox_id = config_value('ticket_inbox_id')
+    return if inbox_id.blank?
+
+    inbox = account&.inboxes&.find_by(id: inbox_id)
+    return if inbox.present? && (inbox.email? || inbox.web_widget?)
+
+    errors.add(:config, I18n.t('portals.config.ticket_inbox_invalid'))
   end
 
   def validate_analytics

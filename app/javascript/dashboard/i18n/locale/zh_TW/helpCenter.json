@@ -976,6 +976,19 @@
         },
         "SAVE": "儲存變更"
       },
+      "INTEGRATIONS": {
+        "TICKET_INBOX": {
+          "TITLE": "工單收件匣",
+          "DESCRIPTION": "從這個說明中心開的工單會建立在哪個收件匣。選 Email 收件匣，客服就能用 email 回覆，客戶的回信也會接回同一張工單。",
+          "PLACEHOLDER": "選擇工單收件匣",
+          "NONE_OPTION": "使用即時聊天小工具的收件匣",
+          "EMAIL_HINT": "客服回覆會從這個收件匣的信箱寄出，客戶用 email 回信會接回同一張工單。",
+          "CHANNEL": {
+            "EMAIL": "Email",
+            "WEBSITE": "網站"
+          }
+        }
+      },
       "API": {
         "CREATE_PORTAL": {
           "SUCCESS_MESSAGE": "入口建立成功",

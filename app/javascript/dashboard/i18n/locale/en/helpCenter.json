@@ -985,6 +985,17 @@
           "PLACEHOLDER": "Select live chat widget",
           "NONE_OPTION": "No widget"
         },
+        "TICKET_INBOX": {
+          "TITLE": "Ticket inbox",
+          "DESCRIPTION": "Where tickets opened from this help center are created. Pick an email inbox so agents can reply by email and customer replies come back into the ticket.",
+          "PLACEHOLDER": "Select ticket inbox",
+          "NONE_OPTION": "Use the live chat widget inbox",
+          "EMAIL_HINT": "Agent replies are sent from this inbox's address and customer email replies thread back into the ticket.",
+          "CHANNEL": {
+            "EMAIL": "Email",
+            "WEBSITE": "Website"
+          }
+        },
         "GTM": {
           "TITLE": "Google Tag Manager",
           "DESCRIPTION": "Add analytics and marketing tags by connecting your Tag Manager container.",

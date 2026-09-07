@@ -95,14 +95,52 @@ const liveChatWidgets = computed(() => {
   ];
 });
 
+// Inboxes that can receive tickets opened from the portal. Email inboxes let agents
+// reply by email and thread customer replies back into the same conversation.
+const TICKET_INBOX_CHANNELS = ['Channel::Email', 'Channel::WebWidget'];
+
+const ticketInboxes = computed(() =>
+  store.getters['inboxes/getInboxes'].filter(inbox =>
+    TICKET_INBOX_CHANNELS.includes(inbox.channel_type)
+  )
+);
+
+const ticketInboxChannelLabel = channelType =>
+  channelType === 'Channel::Email'
+    ? t('HELP_CENTER.PORTAL_SETTINGS.INTEGRATIONS.TICKET_INBOX.CHANNEL.EMAIL')
+    : t(
+        'HELP_CENTER.PORTAL_SETTINGS.INTEGRATIONS.TICKET_INBOX.CHANNEL.WEBSITE'
+      );
+
+const ticketInboxOptions = computed(() => [
+  {
+    value: '',
+    label: t(
+      'HELP_CENTER.PORTAL_SETTINGS.INTEGRATIONS.TICKET_INBOX.NONE_OPTION'
+    ),
+  },
+  ...ticketInboxes.value.map(inbox => ({
+    value: inbox.id,
+    label: `${inbox.name} · ${ticketInboxChannelLabel(inbox.channel_type)}`,
+  })),
+]);
+
 const state = reactive({
   liveChatWidgetInboxId: '',
+  ticketInboxId: '',
   ...Object.fromEntries(ANALYTICS_PROVIDERS.map(({ key }) => [key, ''])),
 });
 const originalState = reactive({ ...state });
 
+const isEmailTicketInbox = computed(
+  () =>
+    ticketInboxes.value.find(inbox => inbox.id === state.ticketInboxId)
+      ?.channel_type === 'Channel::Email'
+);
+
 const resetFromPortal = () => {
   state.liveChatWidgetInboxId = props.activePortal?.inbox?.id || '';
+  state.ticketInboxId = props.activePortal?.config?.ticket_inbox_id ?? '';
   ANALYTICS_PROVIDERS.forEach(({ key }) => {
     state[key] = portalConfig.value.analytics?.[key] || '';
   });
@@ -138,6 +176,7 @@ const isInvalid = key => invalidAnalyticsKeys.value.includes(key);
 const hasChanges = computed(
   () =>
     state.liveChatWidgetInboxId !== originalState.liveChatWidgetInboxId ||
+    state.ticketInboxId !== originalState.ticketInboxId ||
     ANALYTICS_PROVIDERS.some(
       ({ key }) => trimmedAnalyticsValues.value[key] !== originalState[key]
     )
@@ -151,7 +190,10 @@ const handleSave = () => {
     id: props.activePortal.id,
     slug: props.activePortal.slug,
     inbox_id: state.liveChatWidgetInboxId,
-    config: { analytics },
+    config: {
+      analytics,
+      ticket_inbox_id: state.ticketInboxId === '' ? null : state.ticketInboxId,
+    },
   });
 };
 </script>
@@ -182,6 +224,34 @@ const handleSave = () => {
         "
         class="[&>div>button:not(.focused)]:!outline-n-weak"
       />
+    </IntegrationCard>
+
+    <IntegrationCard
+      icon="i-lucide-ticket"
+      :title="t('HELP_CENTER.PORTAL_SETTINGS.INTEGRATIONS.TICKET_INBOX.TITLE')"
+      :description="
+        t('HELP_CENTER.PORTAL_SETTINGS.INTEGRATIONS.TICKET_INBOX.DESCRIPTION')
+      "
+    >
+      <div class="flex flex-col gap-2">
+        <ComboBox
+          v-model="state.ticketInboxId"
+          :options="ticketInboxOptions"
+          :placeholder="
+            t(
+              'HELP_CENTER.PORTAL_SETTINGS.INTEGRATIONS.TICKET_INBOX.PLACEHOLDER'
+            )
+          "
+          class="[&>div>button:not(.focused)]:!outline-n-weak"
+        />
+        <span v-if="isEmailTicketInbox" class="text-xs text-n-slate-11">
+          {{
+            t(
+              'HELP_CENTER.PORTAL_SETTINGS.INTEGRATIONS.TICKET_INBOX.EMAIL_HINT'
+            )
+          }}
+        </span>
+      </div>
     </IntegrationCard>
 
     <template v-if="isAdmin">

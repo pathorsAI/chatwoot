@@ -125,6 +125,53 @@ RSpec.describe Portal do
     end
   end
 
+  describe '#ticket_inbox' do
+    let!(:account) { create(:account) }
+    let!(:web_widget) { create(:channel_widget, account: account) }
+    let!(:portal) { create(:portal, account: account, channel_web_widget: web_widget) }
+    let(:email_inbox) { create(:channel_email, account: account).inbox }
+
+    it 'falls back to the live chat widget inbox' do
+      expect(portal.ticket_inbox).to eq(web_widget.inbox)
+    end
+
+    it 'returns the configured inbox' do
+      portal.update!(config: { ticket_inbox_id: email_inbox.id })
+
+      expect(portal.reload.ticket_inbox).to eq(email_inbox)
+    end
+
+    it 'stores a numeric string as an integer' do
+      portal.update!(config: { ticket_inbox_id: email_inbox.id.to_s })
+
+      expect(portal.config['ticket_inbox_id']).to eq(email_inbox.id)
+      expect(portal.ticket_inbox).to eq(email_inbox)
+    end
+
+    it 'drops the key when a blank value is sent' do
+      portal.update!(config: { ticket_inbox_id: email_inbox.id })
+
+      portal.update!(config: { ticket_inbox_id: '' })
+
+      expect(portal.config).not_to have_key('ticket_inbox_id')
+      expect(portal.ticket_inbox).to eq(web_widget.inbox)
+    end
+
+    it 'rejects an inbox belonging to another account' do
+      portal.config = { ticket_inbox_id: create(:channel_email, account: create(:account)).inbox.id }
+
+      expect(portal).not_to be_valid
+      expect(portal.errors.full_messages).to include('Config ticket inbox must be an email or website inbox of this account')
+    end
+
+    it 'rejects an inbox that is neither an email nor a website inbox' do
+      portal.config = { ticket_inbox_id: create(:channel_api, account: account).inbox.id }
+
+      expect(portal).not_to be_valid
+      expect(portal.errors.full_messages).to include('Config ticket inbox must be an email or website inbox of this account')
+    end
+  end
+
   describe '#display_title' do
     let!(:account) { create(:account) }
 

@@ -25,10 +25,10 @@ module PortalTicketsHelper
     application/vnd.openxmlformats-officedocument.presentationml.presentation
   ].freeze
 
-  # The customer facing ticket entry needs a widget inbox to land submissions in,
-  # so a portal without one hides the entry altogether.
+  # The customer facing ticket entry needs an inbox to land submissions in, so a
+  # portal without one hides the entry altogether.
   def portal_tickets_enabled?(portal)
-    portal.channel_web_widget&.inbox.present? && portal.account.feature_enabled?('tickets')
+    portal.ticket_inbox.present? && portal.account.feature_enabled?('tickets')
   end
 
   def ticket_status_category_classes(status_category)

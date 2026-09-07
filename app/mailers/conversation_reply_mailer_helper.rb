@@ -110,11 +110,16 @@ module ConversationReplyMailerHelper
     email_imap_enabled? ? @channel.email : reply_email
   end
 
-  # Use channel email domain in case of account email domain is not set for custom message_id and in_reply_to
+  # Use channel email domain in case of account email domain is not set for custom message_id and in_reply_to.
+  # A web widget channel has no email of its own, so the support email keeps continuity working there.
   def channel_email_domain
     return @account.inbound_email_domain if @account.inbound_email_domain.present?
 
-    email = @inbox.channel.try(:email)
-    email.present? ? email.split('@').last : raise(StandardError, 'Channel email domain not present.')
+    domain = email_domain(@inbox.channel.try(:email)) || email_domain(@account.support_email)
+    domain.presence || raise(StandardError, 'Channel email domain not present.')
+  end
+
+  def email_domain(email)
+    parse_email(email).split('@').last if email.present?
   end
 end

@@ -786,6 +786,23 @@ RSpec.describe ConversationReplyMailer do
       end
     end
 
+    context 'when neither the account domain nor the channel carries an email' do
+      let(:new_account) { create(:account, domain: nil, support_email: 'Pathors Inbox <inbox@pathors.example>') }
+      let(:inbox) { create(:inbox, account: new_account) }
+      let(:inbox_member) { create(:inbox_member, user: agent, inbox: inbox) }
+      let(:conversation) { create(:conversation, assignee: agent, inbox: inbox_member.inbox, account: new_account) }
+      let!(:message) { create(:message, conversation: conversation, account: new_account) }
+      let(:mail) { described_class.reply_with_summary(message.conversation, message.id).deliver_now }
+
+      it 'falls back to the support email domain for the custom message id' do
+        expect(mail.message_id).to eq("conversation/#{conversation.uuid}/messages/#{message.id}@pathors.example")
+      end
+
+      it 'falls back to the support email domain for the in reply to id' do
+        expect(mail.in_reply_to).to eq("account/#{new_account.id}/conversation/#{conversation.uuid}@pathors.example")
+      end
+    end
+
     context 'when inbox email address is available' do
       let(:inbox) { create(:inbox, account: account, email_address: 'noreply@chatwoot.com') }
       let(:conversation) { create(:conversation, assignee: agent, inbox: inbox, account: account) }

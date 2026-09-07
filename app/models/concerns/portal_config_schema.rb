@@ -33,6 +33,9 @@ module PortalConfigSchema
       'default_locale' => { 'type' => %w[string null] },
       'draft_locales' => { 'type' => %w[array null], 'items' => { 'type' => 'string' } },
       'layout' => { 'type' => %w[string null], 'enum' => ['classic', 'documentation', 'focused', nil] },
+      # Inbox portal tickets land in (see Portal#ticket_inbox). The dashboard may send it as a
+      # numeric string or an empty string; Portal#normalize_config coerces it before validation.
+      'ticket_inbox_id' => { 'type' => %w[integer string null] },
       # TODO: unused reserved key; remove with a migration that scrubs it from existing portals' config
       'website_token' => { 'type' => %w[string null] },
       'social_profiles' => { 'type' => %w[object null] },
