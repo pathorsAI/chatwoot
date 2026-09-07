@@ -283,7 +283,9 @@ export const mutations = {
   ) {
     const [chat] = _state.allConversations.filter(c => c.id === id);
     if (chat) {
-      chat.agent_last_seen_at = lastSeen;
+      if (lastSeen !== undefined) {
+        chat.agent_last_seen_at = lastSeen;
+      }
       chat.unread_count = unreadCount;
     }
   },
