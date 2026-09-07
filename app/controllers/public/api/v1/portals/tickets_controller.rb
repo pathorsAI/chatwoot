@@ -48,12 +48,17 @@ class Public::Api::V1::Portals::TicketsController < Public::Api::V1::Portals::Ba
 
   def access; end
 
+  # Turbo drives the portal forms, and it refuses to render a 200 HTML body in
+  # response to a form submission ("Form responses must redirect to another
+  # location"). Redirect to a GET page instead so the confirmation shows up.
   def send_access_link
     contact = @portal.account.contacts.from_email(submission_params[:email])
     deliver_access_link(contact) if contact.present?
 
-    render :access_sent
+    redirect_to public_portal_ticket_access_sent_path(@portal.slug), status: :see_other
   end
+
+  def access_sent; end
 
   def verify
     contact = contact_from_token
