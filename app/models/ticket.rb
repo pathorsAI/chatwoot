@@ -158,8 +158,17 @@ class Ticket < ApplicationRecord
   def notify_ticket_updated
     return unless previous_changes.keys.intersect?(DISPATCHABLE_ATTRIBUTES)
 
+    sync_mail_subject if previous_changes.key?('subject')
     create_waiting_on_activity if previous_changes.key?('waiting_on')
     dispatcher_dispatch(TICKET_UPDATED, previous_changes)
+  end
+
+  # An email conversation carries the subject the reply mailer sends on, so renaming
+  # the ticket has to move with it or the customer's thread subject drifts apart.
+  def sync_mail_subject
+    return unless conversation.additional_attributes.key?('mail_subject')
+
+    conversation.update!(additional_attributes: conversation.additional_attributes.merge('mail_subject' => subject))
   end
 
   def create_waiting_on_activity

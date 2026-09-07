@@ -85,24 +85,34 @@ class Public::Api::V1::Portals::TicketsController < Public::Api::V1::Portals::Ba
     render_404 unless helpers.portal_tickets_enabled?(@portal)
   end
 
-  def widget_inbox
-    @widget_inbox ||= @portal.channel_web_widget&.inbox
+  def ticket_inbox
+    @ticket_inbox ||= @portal.ticket_inbox
   end
 
   # ----------------------------------------------------------------------
   # Ticket submission
 
   def build_ticket
+    # An email inbox keys its contact inboxes by address (see ContactInboxBuilder), so reusing
+    # the address here lands a reply fetched over IMAP on this same contact inbox.
     contact_inbox = ::ContactInboxWithContactBuilder.new(
-      source_id: SecureRandom.uuid,
-      inbox: widget_inbox,
+      source_id: ticket_inbox.email? ? @submission[:email] : SecureRandom.uuid,
+      inbox: ticket_inbox,
       contact_attributes: { name: @submission[:name].presence, email: @submission[:email] }
     ).perform
 
-    conversation = ::ConversationBuilder.new(params: ActionController::Parameters.new, contact_inbox: contact_inbox).perform
+    conversation = ::ConversationBuilder.new(params: conversation_params, contact_inbox: contact_inbox).perform
     create_description_message(conversation, contact_inbox.contact)
 
     conversation.create_ticket!(account_id: @portal.account_id, subject: @submission[:subject], ticket_type: @submission[:ticket_type])
+  end
+
+  # ConversationReplyMailer sends `mail_subject` as the outbound subject, which is what
+  # keeps the customer's mail client threading their replies onto this conversation.
+  def conversation_params
+    return ActionController::Parameters.new unless ticket_inbox.email?
+
+    ActionController::Parameters.new(additional_attributes: { mail_subject: @submission[:subject] })
   end
 
   def create_description_message(conversation, contact)
@@ -110,7 +120,8 @@ class Public::Api::V1::Portals::TicketsController < Public::Api::V1::Portals::Ba
       account_id: conversation.account_id,
       inbox_id: conversation.inbox_id,
       sender: contact,
-      content: @submission[:description],
+      content: description_content,
+      content_attributes: description_content_attributes,
       message_type: :incoming
     )
     uploaded_attachments.each do |uploaded_attachment|
@@ -121,6 +132,20 @@ class Public::Api::V1::Portals::TicketsController < Public::Api::V1::Portals::Ba
       )
     end
     message.save!
+  end
+
+  # On an email inbox the dashboard renders the subject from the email meta header, so
+  # it is only folded into the body on the widget fallback where nothing else shows it.
+  def description_content
+    return @submission[:description] if ticket_inbox.email?
+
+    "**#{@submission[:subject]}**\n\n#{@submission[:description]}"
+  end
+
+  def description_content_attributes
+    return {} unless ticket_inbox.email?
+
+    { email: { subject: @submission[:subject] } }
   end
 
   # Files ride along as a plain multipart array, so they never go through strong

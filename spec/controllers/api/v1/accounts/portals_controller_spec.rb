@@ -176,7 +176,8 @@ RSpec.describe 'Api::V1::Accounts::Portals', type: :request do
             'social_profiles' => {},
             'locale_translations' => {},
             'popular_content' => {},
-            'analytics' => {}
+            'analytics' => {},
+            'ticket_inbox_id' => nil
           }
         )
       end

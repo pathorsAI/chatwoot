@@ -719,6 +719,8 @@ en:
   portals:
     analytics:
       invalid_configuration: 'Invalid analytics configuration'
+    config:
+      ticket_inbox_invalid: 'ticket inbox must be an email or website inbox of this account'
     articles:
       captain_not_available: 'Translation requires Captain to be enabled for this account'
       locale_not_available: 'Locale not available in this portal'

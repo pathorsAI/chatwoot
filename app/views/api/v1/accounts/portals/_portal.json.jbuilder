@@ -21,6 +21,7 @@ json.config do
   json.locale_translations portal.config['locale_translations'] || {}
   json.popular_content portal.config['popular_content'] || {}
   json.analytics portal.analytics
+  json.ticket_inbox_id portal.config['ticket_inbox_id']
 end
 
 if portal.channel_web_widget

@@ -139,6 +139,25 @@ RSpec.describe Ticket do
     end
   end
 
+  describe 'mail subject sync' do
+    it 'follows the ticket subject when the conversation carries a mail subject' do
+      conversation.update!(additional_attributes: { 'mail_subject' => 'Cannot log in' })
+      ticket
+
+      ticket.update!(subject: 'Still cannot log in')
+
+      expect(conversation.reload.additional_attributes['mail_subject']).to eq('Still cannot log in')
+    end
+
+    it 'does not add a mail subject to a conversation without one' do
+      ticket
+
+      ticket.update!(subject: 'Renamed')
+
+      expect(conversation.reload.additional_attributes).not_to have_key('mail_subject')
+    end
+  end
+
   describe 'activity messages' do
     it 'records an activity message on creation' do
       expect { create(:ticket, account: account, conversation: conversation, subject: 'Refund request') }
