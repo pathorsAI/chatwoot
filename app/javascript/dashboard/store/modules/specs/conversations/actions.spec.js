@@ -291,6 +291,8 @@ describe('#actions', () => {
   });
 
   describe('#markMessagesRead', () => {
+    const state = { allConversations: [{ id: 1, unread_count: 3 }] };
+
     beforeEach(() => {
       vi.useFakeTimers();
     });
@@ -300,17 +302,21 @@ describe('#actions', () => {
       axios.post.mockResolvedValue({
         data: { id: 1, agent_last_seen_at: lastSeen },
       });
-      await actions.markMessagesRead({ commit }, { id: 1 });
+      await actions.markMessagesRead({ commit, state }, { id: 1 });
       vi.runAllTimers();
-      expect(commit).toHaveBeenCalledTimes(1);
+      expect(commit).toHaveBeenCalledTimes(2);
       expect(commit.mock.calls).toEqual([
+        [types.UPDATE_MESSAGE_UNREAD_COUNT, { id: 1 }],
         [types.UPDATE_MESSAGE_UNREAD_COUNT, { id: 1, lastSeen }],
       ]);
     });
-    it('sends correct mutations if api is unsuccessful', async () => {
+    it('restores the unread count if api is unsuccessful', async () => {
       axios.post.mockRejectedValue({ message: 'Incorrect header' });
-      await actions.markMessagesRead({ commit }, { id: 1 });
-      expect(commit.mock.calls).toEqual([]);
+      await actions.markMessagesRead({ commit, state }, { id: 1 });
+      expect(commit.mock.calls).toEqual([
+        [types.UPDATE_MESSAGE_UNREAD_COUNT, { id: 1 }],
+        [types.UPDATE_MESSAGE_UNREAD_COUNT, { id: 1, unreadCount: 3 }],
+      ]);
     });
   });
 
