@@ -158,12 +158,14 @@ class Portal < ApplicationRecord
 
   # Where tickets opened from the public portal land. An email inbox makes them
   # email conversations, so agent replies leave over that inbox and the customer
-  # can answer by mail; the live chat widget inbox stays the default.
+  # can answer by mail; the live chat widget inbox stays the default. A configured
+  # id that no longer resolves (the inbox was deleted) falls back too, so a stale
+  # config degrades to the widget instead of taking the ticket form down.
   def ticket_inbox
     inbox_id = config_value('ticket_inbox_id')
-    return account&.inboxes&.find_by(id: inbox_id) if inbox_id.present?
+    configured_inbox = account&.inboxes&.find_by(id: inbox_id) if inbox_id.present?
 
-    channel_web_widget&.inbox
+    configured_inbox || channel_web_widget&.inbox
   end
 
   private
