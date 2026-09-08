@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue';
+import { reactive, ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
@@ -8,11 +8,13 @@ import { useAlert } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import PathorsPhoneNumbersAPI from 'dashboard/api/pathorsPhoneNumbers';
 import PathorsAgentBotsAPI from 'dashboard/api/pathorsAgentBots';
+import { resolveAgentSelection } from './voiceAgentSelection';
 
 import PageHeader from '../../SettingsSubPageHeader.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
+import SelectInput from 'dashboard/components-next/select/Select.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 
 const { t } = useI18n();
@@ -44,9 +46,41 @@ const selectedPhoneNumber = computed(() =>
   phoneNumbers.value.find(number => number.id === state.phoneNumberId)
 );
 
-// RadioCard identifies its options by string, agent bot ids are numeric.
+// Select identifies its options by string, agent bot ids are numeric.
 const selectedAgentBot = computed(() =>
   agentBots.value.find(bot => String(bot.id) === state.agentBotId)
+);
+
+const agentBotOptions = computed(() =>
+  agentBots.value.map(bot => ({ value: String(bot.id), label: bot.name }))
+);
+
+// Who Pathors already routes the selected number to, if anyone.
+const agentSelection = computed(() =>
+  resolveAgentSelection(selectedPhoneNumber.value, agentBots.value)
+);
+
+const lockedAgentBotName = computed(() => selectedAgentBot.value?.name ?? '');
+
+// Both lists load in parallel, so the routing line on a card only becomes
+// resolvable once the bots arrive.
+const routingLabelByNumberId = computed(() =>
+  phoneNumbers.value.reduce((labels, number) => {
+    const { mode, botId } = resolveAgentSelection(number, agentBots.value);
+
+    if (mode === 'locked') {
+      const bot = agentBots.value.find(item => String(item.id) === botId);
+      labels[number.id] = t('INBOX_MGMT.ADD.VOICE.PHONE_NUMBERS.ANSWERED_BY', {
+        agent: bot.name,
+      });
+    } else if (mode === 'missing') {
+      labels[number.id] = t(
+        'INBOX_MGMT.ADD.VOICE.PHONE_NUMBERS.ANSWERED_ELSEWHERE'
+      );
+    }
+
+    return labels;
+  }, {})
 );
 
 const isSubmitDisabled = computed(
@@ -59,6 +93,12 @@ const formErrors = computed(() => ({
     ? t('INBOX_MGMT.ADD.VOICE.INBOX_NAME.ERROR')
     : '',
 }));
+
+// Picking a different number changes who answers it, so the bot choice cannot
+// survive the switch: it is either dictated by Pathors or asked again.
+watch(agentSelection, ({ botId }) => {
+  state.agentBotId = botId;
+});
 
 async function fetchPhoneNumbers() {
   try {
@@ -94,10 +134,6 @@ onMounted(() => {
 
 function selectPhoneNumber(id) {
   state.phoneNumberId = id;
-}
-
-function selectAgentBot(id) {
-  state.agentBotId = id;
 }
 
 async function createChannel() {
@@ -231,6 +267,12 @@ async function createChannel() {
                   })
                 }}
               </span>
+              <span
+                v-if="routingLabelByNumberId[number.id]"
+                class="text-label-small text-n-slate-10"
+              >
+                {{ routingLabelByNumberId[number.id] }}
+              </span>
             </RadioCard>
           </div>
           <p class="mt-1 mb-0 text-label-small text-n-slate-11">
@@ -239,7 +281,10 @@ async function createChannel() {
         </template>
       </div>
 
-      <div v-if="isIntegrationConnected" class="flex flex-col gap-1">
+      <div
+        v-if="isIntegrationConnected && selectedPhoneNumber"
+        class="flex flex-col gap-1"
+      >
         <span class="mb-0.5 text-heading-3 text-n-slate-12">
           {{ t('INBOX_MGMT.ADD.VOICE.AGENT_BOTS.LABEL') }}
         </span>
@@ -279,20 +324,50 @@ async function createChannel() {
           </router-link>
         </div>
 
-        <template v-else>
-          <div class="flex flex-col gap-2">
-            <RadioCard
-              v-for="bot in agentBots"
-              :id="String(bot.id)"
-              :key="bot.id"
-              :label="bot.name"
-              :description="t('INBOX_MGMT.ADD.VOICE.AGENT_BOTS.DESCRIPTION')"
-              :is-active="state.agentBotId === String(bot.id)"
-              @select="selectAgentBot"
+        <div
+          v-else-if="agentSelection.mode === 'missing'"
+          class="flex flex-col items-start gap-3 p-6 rounded-xl outline outline-1 outline-n-container bg-n-card"
+        >
+          <h4 class="text-heading-3 text-n-slate-12">
+            {{ t('INBOX_MGMT.ADD.VOICE.AGENT_BOTS.NO_MATCHING_BOT.TITLE') }}
+          </h4>
+          <p class="max-w-2xl text-body-main text-n-slate-11">
+            {{
+              t('INBOX_MGMT.ADD.VOICE.AGENT_BOTS.NO_MATCHING_BOT.DESCRIPTION')
+            }}
+          </p>
+          <router-link
+            :to="{
+              name: 'settings_applications_pathors',
+              params: { accountId },
+            }"
+          >
+            <NextButton
+              type="button"
+              :label="
+                t('INBOX_MGMT.ADD.VOICE.AGENT_BOTS.NO_MATCHING_BOT.ACTION')
+              "
+              icon="i-lucide-plug"
+              trailing-icon
             />
-          </div>
-          <p class="mt-1 mb-0 text-label-small text-n-slate-11">
-            {{ t('INBOX_MGMT.ADD.VOICE.AGENT_BOTS.HELP') }}
+          </router-link>
+        </div>
+
+        <template v-else>
+          <SelectInput
+            v-model="state.agentBotId"
+            :options="agentBotOptions"
+            :placeholder="t('INBOX_MGMT.ADD.VOICE.AGENT_BOTS.PLACEHOLDER')"
+            :disabled="agentSelection.mode === 'locked'"
+          />
+          <p class="mt-1 mb-0 max-w-2xl text-label-small text-n-slate-11">
+            {{
+              agentSelection.mode === 'locked'
+                ? t('INBOX_MGMT.ADD.VOICE.AGENT_BOTS.LOCKED_HELP', {
+                    agent: lockedAgentBotName,
+                  })
+                : t('INBOX_MGMT.ADD.VOICE.AGENT_BOTS.HELP')
+            }}
           </p>
         </template>
       </div>

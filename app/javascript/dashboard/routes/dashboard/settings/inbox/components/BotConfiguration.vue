@@ -1,6 +1,7 @@
 <script>
 import { mapGetters } from 'vuex';
 import { useAlert } from 'dashboard/composables';
+import inboxMixin from 'shared/mixins/inboxMixin';
 import SettingsFieldSection from 'dashboard/components-next/Settings/SettingsFieldSection.vue';
 import LoadingState from 'dashboard/components/widgets/LoadingState.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
@@ -13,6 +14,7 @@ export default {
     NextButton,
     SelectInput,
   },
+  mixins: [inboxMixin],
   props: {
     inbox: {
       type: Object,
@@ -35,6 +37,15 @@ export default {
     activeAgentBot() {
       return this.$store.getters['agentBots/getActiveAgentBot'](
         this.currentInboxId
+      );
+    },
+    // On a voice inbox the bot is not just a chat handler: switching it also
+    // re-routes the inbox's phone number in Pathors, so the change reaches
+    // real callers, not only this dashboard.
+    showsVoiceRerouteWarning() {
+      return (
+        this.isAVoiceChannel &&
+        (this.selectedAgentBotId ?? null) !== (this.activeAgentBot?.id ?? null)
       );
     },
   },
@@ -97,6 +108,12 @@ export default {
           :placeholder="$t('AGENT_BOTS.BOT_CONFIGURATION.SELECT_PLACEHOLDER')"
           :options="agentBots.map(bot => ({ value: bot.id, label: bot.name }))"
         />
+        <p
+          v-if="showsVoiceRerouteWarning"
+          class="mt-2 mb-0 max-w-2xl text-label-small text-n-amber-11"
+        >
+          {{ $t('AGENT_BOTS.BOT_CONFIGURATION.VOICE_REROUTE_WARNING') }}
+        </p>
         <template #extra>
           <div class="grid grid-cols-1 lg:grid-cols-8 mt-3">
             <div class="col-span-1 lg:col-span-2 invisible" />
