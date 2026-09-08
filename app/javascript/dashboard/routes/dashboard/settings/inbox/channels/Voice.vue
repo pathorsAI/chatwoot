@@ -63,9 +63,11 @@ const agentSelection = computed(() =>
 const lockedAgentBotName = computed(() => selectedAgentBot.value?.name ?? '');
 
 // Both lists load in parallel, so the routing line on a card only becomes
-// resolvable once the bots arrive.
-const routingLabelByNumberId = computed(() =>
-  phoneNumbers.value.reduce((labels, number) => {
+// resolvable once the bots arrive: until then a routed number would read as
+// "no agent here", which is the one verdict this line must never get wrong.
+const routingLabelByNumberId = computed(() => {
+  if (isLoadingAgentBots.value) return {};
+  return phoneNumbers.value.reduce((labels, number) => {
     const { mode, botId } = resolveAgentSelection(number, agentBots.value);
 
     if (mode === 'locked') {
@@ -80,8 +82,8 @@ const routingLabelByNumberId = computed(() =>
     }
 
     return labels;
-  }, {})
-);
+  }, {});
+});
 
 const isSubmitDisabled = computed(
   () =>
