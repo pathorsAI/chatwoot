@@ -19,6 +19,62 @@ RSpec.describe 'Public Portal Tickets', type: :request do
     get "/hc/#{portal.slug}/tickets/verify", params: { token: token }
   end
 
+  # The ticket routes carry no `:locale` segment, so the locale rides as a query
+  # param. `set_portal_locale` used to overwrite it with the portal default: the
+  # strings still translated (I18n.locale followed the param) but every link on
+  # the page pointed back at the default locale, so choosing a language looked
+  # like it bounced straight back.
+  describe 'locale handling' do
+    let!(:portal) do
+      create(:portal, slug: 'test-portal', account: account, custom_domain: 'www.example.com',
+                      channel_web_widget: web_widget, config: { allowed_locales: %w[en es], default_locale: 'en' })
+    end
+
+    let(:payload) do
+      { name: 'Jane Doe', email: 'jane@example.com', subject: 'Cannot log in', ticket_type: 'issue', description: 'It keeps failing.' }
+    end
+
+    it 'keeps a published locale on the ticket links' do
+      get "/hc/#{portal.slug}/tickets/new", params: { locale: 'es' }
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("/hc/#{portal.slug}/tickets?locale=es")
+    end
+
+    it 'points the home link at the requested locale instead of the portal default' do
+      get "/hc/#{portal.slug}/tickets/new", params: { locale: 'es' }
+
+      expect(response.body).to include("href=\"/hc/#{portal.slug}/es\"")
+      expect(response.body).not_to include("href=\"/hc/#{portal.slug}/en\"")
+    end
+
+    it 'falls back to the portal default for a locale the portal does not publish' do
+      get "/hc/#{portal.slug}/tickets/new", params: { locale: 'zz' }
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("href=\"/hc/#{portal.slug}/en\"")
+      expect(response.body).not_to include('locale=zz')
+    end
+
+    it 'carries the locale through the submission redirect' do
+      post "/hc/#{portal.slug}/tickets", params: payload.merge(locale: 'es')
+
+      expect(response).to redirect_to("/hc/#{portal.slug}/tickets/new?locale=es")
+    end
+
+    it 'carries the locale through the access-link verification redirect' do
+      get "/hc/#{portal.slug}/tickets/verify", params: { token: token, locale: 'es' }
+
+      expect(response).to redirect_to("/hc/#{portal.slug}/tickets?locale=es")
+    end
+
+    it 'leaves the default locale out of the redirect so existing URLs are unchanged' do
+      post "/hc/#{portal.slug}/tickets", params: payload
+
+      expect(response).to redirect_to("/hc/#{portal.slug}/tickets/new")
+    end
+  end
+
   describe 'GET /hc/:slug/tickets/new' do
     it 'renders the submission form' do
       get "/hc/#{portal.slug}/tickets/new"

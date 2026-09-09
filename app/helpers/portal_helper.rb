@@ -60,6 +60,25 @@ module PortalHelper
     end
   end
 
+  # The locale a portal link should be built with. Falls back to the portal
+  # default instead of emitting a locale-less URL, which `hc/:slug/:locale`
+  # cannot route.
+  def portal_link_locale(portal, locale)
+    locale.presence || portal.default_locale
+  end
+
+  # Ticket routes carry no `:locale` segment on purpose: `hc/:slug/tickets` is
+  # declared before `hc/:slug/:locale` (config/routes.rb) so that `tickets` is
+  # not swallowed as a locale. The locale therefore has to ride along as a query
+  # param, and EVERY ticket link and form action must carry it — miss one and
+  # the whole ticket flow silently drops back to the portal default.
+  def portal_ticket_link(portal, sub_path = '', locale = nil)
+    path = "/hc/#{portal.slug}/tickets#{sub_path}"
+    return path if locale.blank? || locale == portal.default_locale
+
+    "#{path}?#{{ locale: locale }.to_query}"
+  end
+
   def generate_category_link(params)
     portal_slug = params[:portal_slug]
     category_locale = params[:category_locale]

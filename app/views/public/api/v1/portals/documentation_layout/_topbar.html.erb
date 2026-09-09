@@ -23,11 +23,11 @@
       </a>
       <%# Customer ticket entry: only shown when the portal is wired to a widget inbox %>
       <% if portal_tickets_enabled?(portal) %>
-        <a href="/hc/<%= portal.slug %>/tickets/new"
+        <a href="<%= portal_ticket_link(portal, '/new', locale) %>"
            class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition text-n-slate-11 hover:text-n-slate-12">
           <%= I18n.t('public_portal.tickets.nav.submit_a_ticket') %>
         </a>
-        <a href="/hc/<%= portal.slug %>/tickets"
+        <a href="<%= portal_ticket_link(portal, '', locale) %>"
            class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition text-n-slate-11 hover:text-n-slate-12">
           <%= I18n.t('public_portal.tickets.nav.my_tickets') %>
         </a>

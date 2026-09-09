@@ -78,10 +78,10 @@
 
         <!-- Customer Ticket Entry -->
         <% if portal_tickets_enabled?(@portal) %>
-          <a href="/hc/<%= @portal.slug %>/tickets/new" class="py-2 text-lg font-medium text-slate-800 dark:text-slate-100">
+          <a href="<%= portal_ticket_link(@portal, '/new', @locale) %>" class="py-2 text-lg font-medium text-slate-800 dark:text-slate-100">
             <%= I18n.t('public_portal.tickets.nav.submit_a_ticket') %>
           </a>
-          <a href="/hc/<%= @portal.slug %>/tickets" class="py-2 text-lg font-medium text-slate-800 dark:text-slate-100">
+          <a href="<%= portal_ticket_link(@portal, '', @locale) %>" class="py-2 text-lg font-medium text-slate-800 dark:text-slate-100">
             <%= I18n.t('public_portal.tickets.nav.my_tickets') %>
           </a>
         <% end %>

@@ -155,6 +155,47 @@ describe PortalHelper do
     end
   end
 
+  describe '#portal_ticket_link' do
+    # The ticket routes deliberately have no `:locale` segment (config/routes.rb),
+    # so the locale can only travel as a query param. Every ticket link has to
+    # carry it — the one that does not is where the flow falls back to English.
+    let(:portal) { build(:portal, slug: 'test-portal', config: { allowed_locales: %w[en es], default_locale: 'en' }) }
+
+    it 'builds the bare ticket path' do
+      expect(helper.portal_ticket_link(portal)).to eq('/hc/test-portal/tickets')
+    end
+
+    it 'appends the sub path' do
+      expect(helper.portal_ticket_link(portal, '/new')).to eq('/hc/test-portal/tickets/new')
+    end
+
+    it 'carries a non-default locale as a query param' do
+      expect(helper.portal_ticket_link(portal, '/new', 'es')).to eq('/hc/test-portal/tickets/new?locale=es')
+    end
+
+    it 'leaves the default locale out so default URLs stay clean' do
+      expect(helper.portal_ticket_link(portal, '/new', 'en')).to eq('/hc/test-portal/tickets/new')
+    end
+
+    it 'leaves a blank locale out' do
+      expect(helper.portal_ticket_link(portal, '', nil)).to eq('/hc/test-portal/tickets')
+      expect(helper.portal_ticket_link(portal, '', '')).to eq('/hc/test-portal/tickets')
+    end
+  end
+
+  describe '#portal_link_locale' do
+    let(:portal) { build(:portal, config: { allowed_locales: %w[en es], default_locale: 'en' }) }
+
+    it 'keeps the locale it is given' do
+      expect(helper.portal_link_locale(portal, 'es')).to eq('es')
+    end
+
+    it 'falls back to the portal default rather than emitting a locale-less URL' do
+      expect(helper.portal_link_locale(portal, nil)).to eq('en')
+      expect(helper.portal_link_locale(portal, '')).to eq('en')
+    end
+  end
+
   describe '#generate_category_link' do
     context 'when theme is not present' do
       it 'returns the correct link' do
