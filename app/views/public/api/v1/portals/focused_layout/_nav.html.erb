@@ -1,8 +1,12 @@
 <%# locals: (portal:, locale:) %>
 <%
-  home_path = generate_home_link(portal.slug, portal.config['default_locale'] || locale, @theme_from_params, false)
+  home_path = generate_home_link(portal.slug, portal_link_locale(portal, locale), @theme_from_params, false)
+  # Bare paths for the active-tab test (request.path carries no query string);
+  # the hrefs below are the locale-carrying variants.
   submit_path = new_public_portal_ticket_path(portal.slug)
   tickets_path = public_portal_tickets_path(portal.slug)
+  submit_href = portal_ticket_link(portal, '/new', locale)
+  access_href = portal_ticket_link(portal, '/access', locale)
   current = if request.path == submit_path
               :submit
             elsif request.path.start_with?(tickets_path)
@@ -34,10 +38,10 @@
 
       <%# Customer ticket entry: only shown when the portal is wired to a widget inbox %>
       <% if portal_tickets_enabled?(portal) %>
-        <a href="<%= submit_path %>" class="<%= link_class.call(current == :submit) %>">
+        <a href="<%= submit_href %>" class="<%= link_class.call(current == :submit) %>">
           <%= I18n.t('public_portal.tickets.nav.submit_a_ticket') %>
         </a>
-        <a href="<%= public_portal_ticket_access_path(portal.slug) %>" class="<%= link_class.call(current == :mine) %>">
+        <a href="<%= access_href %>" class="<%= link_class.call(current == :mine) %>">
           <%= I18n.t('public_portal.tickets.nav.my_tickets') %>
         </a>
       <% end %>
@@ -86,21 +90,8 @@
 
       <%# Locale switcher section %>
       <% if portal.public_locale_codes.length > 1 %>
-        <div class="flex items-center gap-1 stroke-zinc-500 dark:stroke-zinc-400 text-zinc-500 dark:text-zinc-400">
-          <%= render partial: 'icons/globe' %>
-          <select
-            data-portal-slug="<%= portal.slug %>"
-            class="w-24 overflow-hidden text-sm font-medium bg-transparent appearance-none cursor-pointer text-ellipsis whitespace-nowrap focus:outline-none locale-switcher"
-          >
-            <% if portal.draft_locale?(locale) %>
-              <option selected disabled value="<%= locale %>"><%= "#{language_name(locale)} (#{locale})" %></option>
-            <% end %>
-            <% portal.public_locale_codes.each do |code| %>
-              <option <%= code == locale ? 'selected' : '' %> value="<%= code %>"><%= "#{language_name(code)} (#{code})" %></option>
-            <% end %>
-          </select>
-          <%= render partial: 'icons/chevron-down' %>
-        </div>
+        <%= render partial: 'public/api/v1/portals/locale_switcher',
+                   locals: { portal: portal, locale: locale, variant: 'focused' } %>
       <% end %>
     </div>
   </nav>

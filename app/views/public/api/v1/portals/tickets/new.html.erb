@@ -19,10 +19,10 @@
       </p>
 
       <div class="max-w-[280px] mx-auto mt-6 space-y-2.5">
-        <a href="/hc/<%= @portal.slug %>/tickets" class="flex items-center justify-center w-full h-10 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-n-portal hover:opacity-90">
+        <a href="<%= portal_ticket_link(@portal, '', @locale) %>" class="flex items-center justify-center w-full h-10 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-n-portal hover:opacity-90">
           <%= I18n.t('public_portal.tickets.created.view_my_tickets') %>
         </a>
-        <a href="/hc/<%= @portal.slug %>/tickets/new" class="flex items-center justify-center w-full h-10 text-sm font-medium transition-colors rounded-md cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:opacity-90">
+        <a href="<%= portal_ticket_link(@portal, '/new', @locale) %>" class="flex items-center justify-center w-full h-10 text-sm font-medium transition-colors rounded-md cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:opacity-90">
           <%= I18n.t('public_portal.tickets.created.submit_another') %>
         </a>
       </div>
@@ -42,7 +42,7 @@
     <h1 class="text-2xl font-bold text-center text-zinc-900 dark:text-zinc-100"><%= I18n.t('public_portal.tickets.new.title') %></h1>
     <p class="mt-2 text-xs text-center text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.tickets.new.description') %></p>
 
-    <form action="/hc/<%= @portal.slug %>/tickets" method="POST" enctype="multipart/form-data" class="mt-6 space-y-6">
+    <form action="<%= portal_ticket_link(@portal, '', @locale) %>" method="POST" enctype="multipart/form-data" class="mt-6 space-y-6">
       <fieldset class="space-y-2">
         <legend class="<%= label_class %> mb-2"><%= I18n.t('public_portal.tickets.fields.ticket_type') %></legend>
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -159,7 +159,7 @@
 
     <p class="mt-6 text-xs text-center text-zinc-500 dark:text-zinc-400">
       <%= I18n.t('public_portal.tickets.new.already_have_a_ticket') %>
-      <a href="/hc/<%= @portal.slug %>/tickets/access" class="font-medium text-n-portal"><%= I18n.t('public_portal.tickets.new.view_my_tickets') %></a>
+      <a href="<%= portal_ticket_link(@portal, '/access', @locale) %>" class="font-medium text-n-portal"><%= I18n.t('public_portal.tickets.new.view_my_tickets') %></a>
     </p>
   <% end %>
 </div>

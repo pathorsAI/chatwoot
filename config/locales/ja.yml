@@ -507,6 +507,7 @@ ja:
     footer:
       made_with: 作成
     header:
+      language: 言語
       go_to_homepage: ウェブサイト
       visit_website: Visit website
       appearance:
@@ -525,6 +526,91 @@ ja:
       title: Help Center Unavailable
       description: Please contact the site administrator for more information.
       action: If you are the administrator, please upgrade your plan to restore access.
+    focused:
+      nav_articles: 記事
+      hero_subtitle: ガイドを検索するか、チケットを作成してください。メールで返信します。
+      hero_subtitle_tickets_only: チケットを作成してください。メールで返信します。
+      quick_submit_description: 不具合・ご質問・ご要望。メールで返信します。
+      quick_mine_description: メールでお送りするリンクから対応状況を確認できます。
+      no_categories: 公開されている記事はまだありません。
+    tickets:
+      nav:
+        submit_a_ticket: チケットを作成
+        my_tickets: マイチケット
+      fields:
+        name: お名前
+        name_placeholder: 山田 太郎
+        email: メールアドレス
+        email_placeholder: you@company.com
+        subject: 件名
+        subject_placeholder: 問題の概要を簡潔に
+        ticket_type: 種類
+        description: どのようなご用件でしょうか
+        description_placeholder: 何が起きたか、本来どうなるはずだったかをお書きください。
+        attachments: スクリーンショット・ファイル
+        attachments_drop: ここにファイルをドロップ、またはクリックしてアップロード
+        attachments_hint: PNG・JPG・PDF・ログ · 最大 %{count} 件、1 件あたり %{size} まで
+        attachments_remove: ファイルを削除
+      types:
+        question: 質問
+        issue: 不具合
+        request: ご要望
+        incident: 障害
+      status_categories:
+        triage: 新規
+        in_progress: 対応中
+        waiting: 保留中
+        waiting_customer: お客様の返信待ち
+        done: 解決済み
+        closed: クローズ
+      errors:
+        email: 有効なメールアドレスを入力してください。
+        subject: 件名を入力してください。
+        ticket_type: 種類を選択してください。
+        description: ご用件の内容を入力してください。
+        attachments_count: 添付できるファイルは %{count} 件までです。
+        attachment_size: '%{filename} は %{size} を超えています。'
+        attachment_type: '%{filename} は対応していないファイル形式です。'
+        attachment_count_short: '%{count} 件の上限を超えています'
+        attachment_size_short: '%{size} を超えています'
+        attachment_type_short: 対応していないファイル形式です
+      new:
+        title: チケットを作成
+        description: ご用件をお知らせください。メールで返信します。
+        submit: チケットを送信
+        already_have_a_ticket: すでにチケットをお持ちですか？
+        view_my_tickets: マイチケットを見る
+      created:
+        title: チケットを作成しました
+        reply_to: ご依頼を受け付けました。%{email} 宛に返信します。
+        reference_number: 'チケット #%{number}'
+        view_my_tickets: マイチケットを見る
+        submit_another: 別のチケットを作成
+      access:
+        title: マイチケット
+        description: メールアドレスを入力してください。チケットを確認できるリンクをお送りします。
+        submit: リンクを送信
+        submit_a_ticket: 新しいチケットを作成
+        invalid_token: このリンクは有効期限が切れているか、無効です。下記から再度お求めください。
+      access_sent:
+        title: メールをご確認ください
+        description: そのメールアドレスで受け付けたチケットがある場合、サインイン用のリンクをお送りしました。リンクは 15 分で失効します。
+      access_mailer:
+        subject: '%{portal_name} のチケット確認用リンク'
+      index:
+        title: マイチケット
+        subtitle:
+          other: 'チケット %{count} 件 · %{email}'
+        new_ticket: チケットを作成
+        empty: チケットはまだありません。
+        updated_ago: '%{time}前に更新'
+      show:
+        back_to_list: マイチケットに戻る
+        created_at: '%{time} 作成'
+        no_messages: このチケットにはまだメッセージがありません。
+        you: あなた
+        attachments: 添付ファイル
+        reply_hint: このチケットに追記するには、お送りしたメールに返信してください。
   slack_unfurl:
     fields:
       name: 名前

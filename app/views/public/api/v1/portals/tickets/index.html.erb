@@ -10,14 +10,14 @@
 
   <% if @tickets.empty? %>
     <p class="mt-8 text-sm text-center text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.tickets.index.empty') %></p>
-    <a href="/hc/<%= @portal.slug %>/tickets/new" class="flex items-center justify-center w-full h-10 max-w-[240px] mx-auto mt-4 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-n-portal hover:opacity-90">
+    <a href="<%= portal_ticket_link(@portal, '/new', @locale) %>" class="flex items-center justify-center w-full h-10 max-w-[240px] mx-auto mt-4 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-n-portal hover:opacity-90">
       <%= I18n.t('public_portal.tickets.index.new_ticket') %>
     </a>
   <% else %>
     <ul class="mt-4 space-y-2.5">
       <% @tickets.each do |ticket| %>
         <li>
-          <a href="/hc/<%= @portal.slug %>/tickets/<%= ticket.id %>" class="flex items-center gap-3 px-5 py-3.5 border border-solid rounded-xl border-zinc-200 dark:border-zinc-800 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <a href="<%= portal_ticket_link(@portal, "/#{ticket.id}", @locale) %>" class="flex items-center gap-3 px-5 py-3.5 border border-solid rounded-xl border-zinc-200 dark:border-zinc-800 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800">
             <svg class="flex-shrink-0 w-5 h-5 text-zinc-500 dark:text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="3" y="4" width="18" height="16" rx="2" />
               <path d="M3 9h18" />
@@ -41,7 +41,7 @@
       <% end %>
     </ul>
 
-    <a href="/hc/<%= @portal.slug %>/tickets/new" class="flex items-center justify-center w-full h-10 max-w-[240px] mx-auto mt-6 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-n-portal hover:opacity-90">
+    <a href="<%= portal_ticket_link(@portal, '/new', @locale) %>" class="flex items-center justify-center w-full h-10 max-w-[240px] mx-auto mt-6 text-sm font-medium text-white transition-colors rounded-md cursor-pointer bg-n-portal hover:opacity-90">
       <%= I18n.t('public_portal.tickets.index.new_ticket') %>
     </a>
   <% end %>

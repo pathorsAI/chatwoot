@@ -6,7 +6,7 @@
   <h1 class="text-2xl font-bold text-center text-zinc-900 dark:text-zinc-100"><%= I18n.t('public_portal.tickets.access.title') %></h1>
   <p class="mt-2 text-xs text-center text-zinc-500 dark:text-zinc-400"><%= I18n.t('public_portal.tickets.access.description') %></p>
 
-  <form action="/hc/<%= @portal.slug %>/tickets/access" method="POST" class="mt-6 space-y-6">
+  <form action="<%= portal_ticket_link(@portal, '/access', @locale) %>" method="POST" class="mt-6 space-y-6">
     <div class="space-y-2">
       <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100" for="access-email"><%= I18n.t('public_portal.tickets.fields.email') %></label>
       <input class="w-full h-10 px-3 text-sm bg-white border border-solid rounded-md dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-n-portal focus:border-transparent <%= @error.present? ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800' %>"
@@ -20,6 +20,6 @@
   </form>
 
   <p class="mt-6 text-xs text-center text-zinc-500 dark:text-zinc-400">
-    <a href="/hc/<%= @portal.slug %>/tickets/new" class="font-medium text-n-portal"><%= I18n.t('public_portal.tickets.access.submit_a_ticket') %></a>
+    <a href="<%= portal_ticket_link(@portal, '/new', @locale) %>" class="font-medium text-n-portal"><%= I18n.t('public_portal.tickets.access.submit_a_ticket') %></a>
   </p>
 </div>
