@@ -342,6 +342,8 @@
           "LOADING": "正在載入 Pathors 電話號碼…",
           "EXTENSION": "分機 {extension}",
           "TAKEN_LABEL": "已使用",
+          "ANSWERED_BY": "由 {agent} 接聽",
+          "ANSWERED_ELSEWHERE": "接聽的專案在此帳號尚無 agent",
           "FETCH_ERROR": "無法載入 Pathors 電話號碼",
           "NOT_CONNECTED": {
             "TITLE": "請先連接 Pathors",
@@ -356,12 +358,19 @@
         "AGENT_BOTS": {
           "LABEL": "誰接聽",
           "DESCRIPTION": "透過 Pathors 接聽來電",
+          "PLACEHOLDER": "選擇 agent",
           "HELP": "由這個 Pathors agent 接聽打進這組號碼的電話，建立後可在收件匣設定中更換。",
+          "LOCKED_HELP": "這支號碼目前在 Pathors 由 {agent} 接聽。要換接聽的 agent，請先建立收件匣，再到收件匣設定更改。",
           "LOADING": "正在載入 Pathors agent…",
           "FETCH_ERROR": "無法載入 Pathors agent",
           "EMPTY": {
             "TITLE": "尚未有 Pathors agent",
             "DESCRIPTION": "來電由您在 Pathors 部署的 agent 接聽。在 Pathors 部署 agent 後再回來完成這個收件匣。",
+            "ACTION": "前往 Pathors 整合設定"
+          },
+          "NO_MATCHING_BOT": {
+            "TITLE": "此帳號沒有對應的 agent",
+            "DESCRIPTION": "這支號碼由某個 Pathors 專案接聽，但該專案在此帳號尚未有 agent。請在 Pathors 整合設定中連接該專案，或改選其他號碼。",
             "ACTION": "前往 Pathors 整合設定"
           }
         },

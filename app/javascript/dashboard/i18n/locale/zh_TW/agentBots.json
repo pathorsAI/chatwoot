@@ -22,7 +22,8 @@
       "DISCONNECTED_SUCCESS_MESSAGE": "機器人已成功解除連結。",
       "ERROR_MESSAGE": "無法更新機器人，請再試一次。",
       "DISCONNECTED_ERROR_MESSAGE": "無法解除機器人連結，請再試一次。",
-      "SELECT_PLACEHOLDER": "選擇機器人"
+      "SELECT_PLACEHOLDER": "選擇機器人",
+      "VOICE_REROUTE_WARNING": "更換 bot 會同時改掉這支號碼在 Pathors 的路由，來電將改由新 agent 所屬的專案接聽。"
     },
     "ADD": {
       "TITLE": "新增機器人",

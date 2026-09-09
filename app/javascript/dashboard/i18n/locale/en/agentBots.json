@@ -22,7 +22,8 @@
       "DISCONNECTED_SUCCESS_MESSAGE": "Successfully disconnected the agent bot.",
       "ERROR_MESSAGE": "Could not update the agent bot. Please try again.",
       "DISCONNECTED_ERROR_MESSAGE": "Could not disconnect the agent bot. Please try again.",
-      "SELECT_PLACEHOLDER": "Select bot"
+      "SELECT_PLACEHOLDER": "Select bot",
+      "VOICE_REROUTE_WARNING": "Changing the bot re-routes this inbox's phone number in Pathors: calls will be answered by the new agent's project."
     },
     "ADD": {
       "TITLE": "Add Bot",
