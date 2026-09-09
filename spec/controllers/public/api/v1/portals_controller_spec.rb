@@ -63,14 +63,14 @@ RSpec.describe Public::Api::V1::PortalsController, type: :request do
       end
     end
 
-    it 'hides drafted locales from the public locale switcher' do
+    it 'renders no switcher at all when only one locale is published' do
       portal.update!(config: { allowed_locales: %w[en es], draft_locales: ['es'], default_locale: 'en' })
 
       get "/hc/#{portal.slug}/en"
 
       expect(response).to have_http_status(:success)
-      expect(response.body).not_to include('value="es"')
-      expect(response.body).not_to include('locale-switcher')
+      expect(response.body).not_to include('toggle-locale')
+      expect(response.body).not_to include("/hc/#{portal.slug}/es")
     end
 
     it 'allows direct access to drafted locale pages' do
@@ -81,7 +81,10 @@ RSpec.describe Public::Api::V1::PortalsController, type: :request do
       expect(response).to have_http_status(:success)
     end
 
-    it 'shows the active drafted locale in the switcher state on direct locale access' do
+    # A drafted locale is not somewhere a visitor may navigate to, but it is somewhere
+    # they can already be. The trigger names where you are; the menu lists where you
+    # can go, so the draft shows in the former and not the latter.
+    it 'shows the active drafted locale on the trigger but keeps it out of the menu' do
       portal.update!(config: { allowed_locales: %w[en es fr], draft_locales: ['es'], default_locale: 'en' })
 
       get "/hc/#{portal.slug}/es"
@@ -89,20 +92,29 @@ RSpec.describe Public::Api::V1::PortalsController, type: :request do
       expect(response).to have_http_status(:success)
 
       document = Nokogiri::HTML(response.body)
-      switchers = document.css('select.locale-switcher')
+      trigger = document.at_css('#toggle-locale')
+      menu = document.at_css('#locale-dropdown')
 
-      expect(switchers).not_to be_empty
+      expect(trigger).to be_present
+      expect(trigger.text).to include('Español')
 
-      switchers.each do |switcher|
-        options = switcher.css('option')
+      hrefs = menu.css('a').map { |link| link['href'] }
+      expect(hrefs).to include("/hc/#{portal.slug}/en", "/hc/#{portal.slug}/fr")
+      expect(hrefs).not_to include("/hc/#{portal.slug}/es")
+    end
 
-        expect(options.map { |option| option['value'] }).to include('en', 'es', 'fr')
-        expect(
-          options.any? do |option|
-            option['value'] == 'es' && option['selected'].present? && option['disabled'].present?
-          end
-        ).to be(true)
-      end
+    it 'marks the current locale and links every other one to the same page' do
+      portal.update!(config: { allowed_locales: %w[en fr], default_locale: 'en' })
+
+      get "/hc/#{portal.slug}/en"
+
+      expect(response).to have_http_status(:success)
+
+      document = Nokogiri::HTML(response.body)
+      items = document.css('#locale-dropdown a')
+
+      expect(items.map { |item| item['href'] }).to contain_exactly("/hc/#{portal.slug}/en", "/hc/#{portal.slug}/fr")
+      expect(items.select { |item| item['aria-current'] == 'true' }.map(&:text).map(&:strip)).to contain_exactly('English')
     end
   end
 
