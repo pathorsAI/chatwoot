@@ -1,0 +1,50 @@
+<%# locals: (portal:, locale:, variant:) %>
+<%
+  # `variant` picks the palette of the surrounding header: the classic layout is
+  # slate, the focused one zinc. Structure and behaviour are shared.
+  focused = variant == 'focused'
+  codes = portal.public_locale_codes
+  trigger_class = if focused
+                    'flex flex-row items-center gap-1 text-sm font-medium transition-colors cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 stroke-zinc-500 dark:stroke-zinc-400'
+                  else
+                    'flex flex-row items-center gap-1 px-1 py-2 cursor-pointer stroke-slate-700 dark:stroke-slate-200 text-slate-800 dark:text-slate-100'
+                  end
+  menu_class = if focused
+                 'locale-menu absolute hidden flex-col w-44 max-h-72 overflow-y-auto top-10 ltr:right-0 rtl:left-0 p-1 gap-0.5 bg-white dark:bg-zinc-950 border border-solid border-zinc-200 dark:border-zinc-800 rounded-md transition-opacity duration-150 opacity-0 data-[dropdown-open=true]:opacity-100 data-[dropdown-open=true]:flex'
+               else
+                 'locale-menu absolute hidden flex-col w-44 max-h-72 overflow-y-auto top-9 ltr:right-1 rtl:left-1 p-1 gap-0.5 bg-white dark:bg-slate-900 border border-solid rounded border-slate-100 dark:border-slate-800 shadow-lg transition-all duration-200 ease-out opacity-0 scale-95 data-[dropdown-open=true]:opacity-100 data-[dropdown-open=true]:scale-100 data-[dropdown-open=true]:flex'
+               end
+  item_class = if focused
+                 'flex flex-row items-center justify-between gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-zinc-900 dark:text-zinc-100 stroke-zinc-500 dark:stroke-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+               else
+                 'flex flex-row items-center justify-between gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors text-slate-800 dark:text-slate-100 stroke-slate-700 dark:stroke-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
+               end
+%>
+<div class="relative">
+  <button id="toggle-locale" type="button" class="<%= trigger_class %>"
+          aria-haspopup="menu" aria-expanded="false" aria-label="<%= I18n.t('public_portal.header.language') %>">
+    <%= render partial: 'public/api/v1/portals/locale_flag', locals: { locale: locale } %>
+    <%# The focused header keeps its controls to icons; the classic one labels them. %>
+    <% unless focused %>
+      <span class="text-sm font-medium whitespace-nowrap"><%= portal_locale_label(locale) %></span>
+    <% end %>
+    <span class="flex items-center pointer-events-none">
+      <%= render partial: 'icons/chevron-down' %>
+    </span>
+  </button>
+
+  <div id="locale-dropdown" class="<%= menu_class %>" role="menu" aria-hidden="true" data-dropdown="locale-dropdown">
+    <% codes.each do |code| %>
+      <a href="<%= portal_locale_switch_link(portal, code) %>" role="menuitem" class="<%= item_class %>"
+         <%= tag.attributes('aria-current': 'true') if code == locale %>>
+        <span class="flex flex-row items-center gap-2">
+          <%= render partial: 'public/api/v1/portals/locale_flag', locals: { locale: code } %>
+          <span class="text-xs font-medium"><%= portal_locale_label(code) %></span>
+        </span>
+        <span class="<%= 'invisible' unless code == locale %>">
+          <%= render partial: 'icons/check-mark' %>
+        </span>
+      </a>
+    <% end %>
+  </div>
+</div>

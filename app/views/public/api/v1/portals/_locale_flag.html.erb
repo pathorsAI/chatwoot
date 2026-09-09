@@ -1,0 +1,10 @@
+<%# locals: (locale:, size: 'w-4 h-4') %>
+<%# Circle flags are separate files rather than inlined SVG on purpose: upstream
+    reuses `<mask id="a">` in every flag, so inlining several into one document
+    makes them clip each other. %>
+<% flag = portal_locale_flag(locale) %>
+<% if flag %>
+  <img src="/flags/<%= flag %>.svg" alt="" aria-hidden="true" draggable="false" class="<%= size %> rounded-full shrink-0" />
+<% else %>
+  <span class="<%= size %> flex items-center shrink-0"><%= render partial: 'icons/globe' %></span>
+<% end %>

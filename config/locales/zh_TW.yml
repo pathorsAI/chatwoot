@@ -548,6 +548,7 @@ zh_TW:
     footer:
       made_with: 由以下技術製作
     header:
+      language: 語言
       go_to_homepage: 網站首頁
       visit_website: 前往網站
       appearance:

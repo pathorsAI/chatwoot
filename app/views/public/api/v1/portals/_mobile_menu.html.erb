@@ -51,25 +51,25 @@
           <span class="h-px bg-slate-100/70 dark:bg-slate-800/70 w-full"></span>
         <% end %>
 
-        <!-- Locale Switcher -->
+        <!-- Locale Switcher: a flat list, the same shape as the theme section above.
+             A dropdown inside an already-open drawer would be a menu in a menu. -->
         <% if has_multiple_locales %>
-          <div id="header-action-button" class="flex flex-col gap-2">
+          <div class="flex flex-col gap-2">
             <h3 class="text-base font-medium text-slate-700 dark:text-slate-300 my-2">
-              <%= I18n.t('public_portal.header.language', default: 'Language') %>
+              <%= I18n.t('public_portal.header.language') %>
             </h3>
-            <div class="flex items-center gap-3 py-2 cursor-pointer stroke-slate-800 dark:stroke-slate-100">
-            <%= render partial: 'icons/globe' %>
-              <select
-                data-portal-slug="<%= @portal.slug %>"
-                class="flex-1 bg-transparent text-lg font-medium cursor-pointer focus:outline-none locale-switcher text-slate-800 dark:text-slate-100 hover:text-slate-700 dark:hover:text-slate-200"
-              >
-                <% if @portal.draft_locale?(@locale) %>
-                  <option selected disabled value="<%= @locale %>"><%= "#{language_name(@locale)} (#{@locale})" %></option>
-                <% end %>
-                <% @portal.public_locale_codes.each do |locale| %>
-                  <option <%= locale == @locale ? 'selected': '' %> value="<%= locale %>"><%= "#{language_name(locale)} (#{locale})" %></option>
-                <% end %>
-              </select>
+            <div class="space-y-1">
+              <% @portal.public_locale_codes.each do |code| %>
+                <a href="<%= portal_locale_switch_link(@portal, code) %>"
+                   class="flex items-center gap-3 justify-start w-full py-2 transition-colors text-slate-800 dark:text-slate-100 hover:text-slate-700 dark:hover:text-slate-200 stroke-slate-800 dark:stroke-slate-100"
+                   <%= tag.attributes('aria-current': 'true') if code == @locale %>>
+                  <%= render partial: 'public/api/v1/portals/locale_flag', locals: { locale: code, size: 'w-5 h-5' } %>
+                  <span class="text-lg font-medium"><%= portal_locale_label(code) %></span>
+                  <span class="<%= 'invisible' unless code == @locale %>">
+                    <%= render partial: 'icons/check-mark' %>
+                  </span>
+                </a>
+              <% end %>
             </div>
           </div>
         <% end %>

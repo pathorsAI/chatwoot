@@ -507,6 +507,7 @@ ko:
     footer:
       made_with: 제작 도구
     header:
+      language: 언어
       go_to_homepage: 홈페이지
       visit_website: 웹사이트 방문
       appearance:
@@ -525,6 +526,91 @@ ko:
       title: Help Center Unavailable
       description: Please contact the site administrator for more information.
       action: If you are the administrator, please upgrade your plan to restore access.
+    focused:
+      nav_articles: 도움말
+      hero_subtitle: 도움말을 검색하시거나 티켓을 남겨 주세요. 이메일로 답변드립니다.
+      hero_subtitle_tickets_only: 티켓을 남겨 주시면 이메일로 답변드립니다.
+      quick_submit_description: 오류, 문의, 요청 사항. 이메일로 답변드립니다.
+      quick_mine_description: 이메일로 보내 드린 링크에서 진행 상황을 확인하세요.
+      no_categories: 아직 게시된 도움말이 없습니다.
+    tickets:
+      nav:
+        submit_a_ticket: 티켓 남기기
+        my_tickets: 내 티켓
+      fields:
+        name: 이름
+        name_placeholder: 홍길동
+        email: 이메일
+        email_placeholder: you@company.com
+        subject: 제목
+        subject_placeholder: 문제를 한 줄로 요약해 주세요
+        ticket_type: 유형
+        description: 무엇을 도와드릴까요?
+        description_placeholder: 어떤 일이 있었는지, 원래 어떻게 되어야 했는지 알려 주세요.
+        attachments: 스크린샷 또는 파일
+        attachments_drop: 여기에 파일을 놓거나 클릭해서 업로드하세요
+        attachments_hint: PNG, JPG, PDF, 로그 · 최대 %{count}개, 개당 %{size}
+        attachments_remove: 파일 삭제
+      types:
+        question: 문의
+        issue: 오류
+        request: 요청
+        incident: 장애
+      status_categories:
+        triage: 신규
+        in_progress: 처리 중
+        waiting: 대기 중
+        waiting_customer: 회신 대기 중
+        done: 해결됨
+        closed: 종료됨
+      errors:
+        email: 올바른 이메일 주소를 입력해 주세요.
+        subject: 제목을 입력해 주세요.
+        ticket_type: 유형을 선택해 주세요.
+        description: 요청 내용을 입력해 주세요.
+        attachments_count: 파일은 최대 %{count}개까지 첨부할 수 있습니다.
+        attachment_size: '%{filename}이(가) %{size}을(를) 초과합니다.'
+        attachment_type: '%{filename}은(는) 지원하지 않는 파일 형식입니다.'
+        attachment_count_short: '최대 %{count}개 초과'
+        attachment_size_short: '%{size} 초과'
+        attachment_type_short: 지원하지 않는 파일 형식
+      new:
+        title: 티켓 남기기
+        description: 필요하신 내용을 알려 주시면 이메일로 답변드립니다.
+        submit: 티켓 보내기
+        already_have_a_ticket: 이미 남기신 티켓이 있나요?
+        view_my_tickets: 내 티켓 보기
+      created:
+        title: 티켓이 접수되었습니다
+        reply_to: 요청을 접수했으며 %{email}(으)로 답변드리겠습니다.
+        reference_number: '티켓 #%{number}'
+        view_my_tickets: 내 티켓 보기
+        submit_another: 티켓 추가로 남기기
+      access:
+        title: 내 티켓
+        description: 이메일 주소를 입력하시면 티켓을 확인할 수 있는 링크를 보내 드립니다.
+        submit: 링크 받기
+        submit_a_ticket: 새 티켓 남기기
+        invalid_token: 이 링크는 만료되었거나 유효하지 않습니다. 아래에서 다시 요청해 주세요.
+      access_sent:
+        title: 메일함을 확인해 주세요
+        description: 해당 이메일 주소로 접수된 티켓이 있다면 확인용 링크를 보내 드렸습니다. 링크는 15분 후 만료됩니다.
+      access_mailer:
+        subject: '%{portal_name} 티켓 확인 링크'
+      index:
+        title: 내 티켓
+        subtitle:
+          other: '티켓 %{count}개 · %{email}'
+        new_ticket: 티켓 남기기
+        empty: 아직 남기신 티켓이 없습니다.
+        updated_ago: '%{time} 전 업데이트'
+      show:
+        back_to_list: 내 티켓으로 돌아가기
+        created_at: '%{time} 생성'
+        no_messages: 이 티켓에는 아직 메시지가 없습니다.
+        you: 나
+        attachments: 첨부 파일
+        reply_hint: 이 티켓에 내용을 추가하시려면 보내 드린 이메일에 답장해 주세요.
   slack_unfurl:
     fields:
       name: 이름

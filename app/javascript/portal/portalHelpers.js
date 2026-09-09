@@ -71,13 +71,35 @@ export const openExternalLinksInNewTab = () => {
 };
 
 export const InitializationHelpers = {
-  navigateToLocalePage: () => {
-    document.addEventListener('change', e => {
-      const localeSwitcher = e.target.closest('.locale-switcher');
-      if (!localeSwitcher) return;
+  // The switcher's entries are plain links whose hrefs the server builds (it is the
+  // only side that knows the route shape and which page has a counterpart in another
+  // language), so this only has to open and close the menu.
+  initializeLocaleDropdown: () => {
+    const toggle = document.getElementById('toggle-locale');
+    const dropdown = document.getElementById('locale-dropdown');
+    if (!toggle || !dropdown) return;
 
-      const { portalSlug } = localeSwitcher.dataset;
-      window.location.href = `/hc/${encodeURIComponent(portalSlug)}/${encodeURIComponent(localeSwitcher.value)}/`;
+    const setOpen = open => {
+      dropdown.dataset.dropdownOpen = String(open);
+      dropdown.setAttribute('aria-hidden', String(!open));
+      toggle.setAttribute('aria-expanded', String(open));
+    };
+
+    toggle.addEventListener('click', e => {
+      e.stopPropagation();
+      setOpen(dropdown.dataset.dropdownOpen !== 'true');
+    });
+
+    document.addEventListener('click', ({ target }) => {
+      if (toggle.contains(target) || dropdown.contains(target)) return;
+      if (dropdown.dataset.dropdownOpen === 'true') setOpen(false);
+    });
+
+    document.addEventListener('keydown', ({ key }) => {
+      if (key === 'Escape' && dropdown.dataset.dropdownOpen === 'true') {
+        setOpen(false);
+        toggle.focus();
+      }
     });
   },
 
@@ -180,7 +202,7 @@ export const InitializationHelpers = {
       InitializationHelpers.appendPlainParamToURLs();
     } else {
       InitializationHelpers.initializeThemesInPortal();
-      InitializationHelpers.navigateToLocalePage();
+      InitializationHelpers.initializeLocaleDropdown();
       InitializationHelpers.initializeSearch();
       InitializationHelpers.initializeTableOfContents();
       InitializationHelpers.initializeSidebarThemeToggle();

@@ -5,16 +5,20 @@ import {
   openExternalLinksInNewTab,
 } from '../portalHelpers';
 
-describe('InitializationHelpers.navigateToLocalePage', () => {
+describe('InitializationHelpers.initializeLocaleDropdown', () => {
   let dom;
   let document;
   let window;
 
+  const markup = `<!DOCTYPE html><html><body>
+      <button id="toggle-locale" aria-expanded="false"></button>
+      <div id="locale-dropdown" aria-hidden="true">
+        <a href="/hc/test-slug/fr">French</a>
+      </div>
+    </body></html>`;
+
   beforeEach(() => {
-    dom = new JSDOM(
-      '<!DOCTYPE html><html><body><div class="locale-switcher" data-portal-slug="test-slug"><select><option value="en">English</option><option value="fr">French</option></select></div></body></html>',
-      { url: 'http://localhost/' }
-    );
+    dom = new JSDOM(markup, { url: 'http://localhost/' });
     document = dom.window.document;
     window = dom.window;
     global.document = document;
@@ -29,21 +33,57 @@ describe('InitializationHelpers.navigateToLocalePage', () => {
     delete global.window;
   });
 
-  it('sets up document event listener regardless of locale-switcher existence', () => {
-    document.querySelector('.locale-switcher').remove();
+  it('does nothing when the portal publishes a single locale and no switcher is rendered', () => {
+    document.getElementById('toggle-locale').remove();
     const documentSpy = vi.spyOn(document, 'addEventListener');
-    InitializationHelpers.navigateToLocalePage();
-    expect(documentSpy).toHaveBeenCalledWith('change', expect.any(Function));
+
+    InitializationHelpers.initializeLocaleDropdown();
+
+    expect(documentSpy).not.toHaveBeenCalled();
     documentSpy.mockRestore();
   });
 
-  it('adds document-level event listener to handle locale switching', () => {
-    const documentSpy = vi.spyOn(document, 'addEventListener');
+  it('opens on the trigger and reflects it on aria-expanded', () => {
+    InitializationHelpers.initializeLocaleDropdown();
+    const toggle = document.getElementById('toggle-locale');
+    const dropdown = document.getElementById('locale-dropdown');
 
-    InitializationHelpers.navigateToLocalePage();
+    toggle.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 
-    expect(documentSpy).toHaveBeenCalledWith('change', expect.any(Function));
-    documentSpy.mockRestore();
+    expect(dropdown.dataset.dropdownOpen).toBe('true');
+    expect(dropdown.getAttribute('aria-hidden')).toBe('false');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('closes on an outside click but stays open while clicking inside', () => {
+    InitializationHelpers.initializeLocaleDropdown();
+    const toggle = document.getElementById('toggle-locale');
+    const dropdown = document.getElementById('locale-dropdown');
+    toggle.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+
+    dropdown
+      .querySelector('a')
+      .dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    expect(dropdown.dataset.dropdownOpen).toBe('true');
+
+    document.body.dispatchEvent(
+      new window.MouseEvent('click', { bubbles: true })
+    );
+    expect(dropdown.dataset.dropdownOpen).toBe('false');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('closes on Escape', () => {
+    InitializationHelpers.initializeLocaleDropdown();
+    const toggle = document.getElementById('toggle-locale');
+    const dropdown = document.getElementById('locale-dropdown');
+    toggle.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+
+    document.dispatchEvent(
+      new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    );
+
+    expect(dropdown.dataset.dropdownOpen).toBe('false');
   });
 });
 

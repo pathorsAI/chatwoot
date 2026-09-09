@@ -90,21 +90,8 @@
 
       <%# Locale switcher section %>
       <% if portal.public_locale_codes.length > 1 %>
-        <div class="flex items-center gap-1 stroke-zinc-500 dark:stroke-zinc-400 text-zinc-500 dark:text-zinc-400">
-          <%= render partial: 'icons/globe' %>
-          <select
-            data-portal-slug="<%= portal.slug %>"
-            class="w-24 overflow-hidden text-sm font-medium bg-transparent appearance-none cursor-pointer text-ellipsis whitespace-nowrap focus:outline-none locale-switcher"
-          >
-            <% if portal.draft_locale?(locale) %>
-              <option selected disabled value="<%= locale %>"><%= "#{language_name(locale)} (#{locale})" %></option>
-            <% end %>
-            <% portal.public_locale_codes.each do |code| %>
-              <option <%= code == locale ? 'selected' : '' %> value="<%= code %>"><%= "#{language_name(code)} (#{code})" %></option>
-            <% end %>
-          </select>
-          <%= render partial: 'icons/chevron-down' %>
-        </div>
+        <%= render partial: 'public/api/v1/portals/locale_switcher',
+                   locals: { portal: portal, locale: locale, variant: 'focused' } %>
       <% end %>
     </div>
   </nav>
