@@ -32,6 +32,12 @@ const durationSeconds = ref(0);
 // Which call this tab is in, so a second bubble can tell "someone else's call
 // is live" from "my call is live".
 const activeCallId = ref(null);
+// The browser's autoplay policy refused to play the room's audio. By the time
+// remote tracks arrive the "join" click's user gesture has long expired (HTTP
+// round-trip + dynamic import + connect + mic prompt), so Safari — and Chrome
+// often enough — silently mutes the caller. The bubble shows an "enable audio"
+// button while this is true; that click is a fresh gesture.
+const isAudioBlocked = ref(false);
 
 let room = null;
 let durationTimer = null;
@@ -68,10 +74,17 @@ const attachAudioTrack = track => {
   el.style.display = 'none';
   document.body.appendChild(el);
   attachedElements.push(el);
-  // Autoplay policies can still refuse; the agent already gesture-clicked
-  // "join", so this is a belt-and-braces retry rather than the happy path.
+  // Autoplay policies can refuse here: the "join" gesture is gone by the time
+  // tracks arrive. Surface it so the agent gets a button to unlock playback
+  // instead of sitting in a call they cannot hear.
   const played = el.play?.();
-  if (played?.catch) played.catch(() => {});
+  if (played?.catch) {
+    played.catch(err => {
+      // eslint-disable-next-line no-console
+      console.warn('[pathors-call] audio playback blocked', err);
+      isAudioBlocked.value = true;
+    });
+  }
 };
 
 const detachAudioTrack = track => {
@@ -91,6 +104,7 @@ const resetSession = () => {
   isJoining.value = false;
   activeCallId.value = null;
   durationSeconds.value = 0;
+  isAudioBlocked.value = false;
 };
 
 // Maps the relay's HTTP answer onto a code the bubble can phrase. 409 is the
@@ -106,9 +120,18 @@ const errorCodeFor = requestError => {
 const connectToRoom = async credentials => {
   const { Room, RoomEvent } = await import('livekit-client');
 
-  room = new Room();
+  // Kept as a local so the listeners below never read the module-level `room`
+  // after a reset has nulled it.
+  const lkRoom = new Room();
+  room = lkRoom;
   room.on(RoomEvent.TrackSubscribed, track => attachAudioTrack(track));
   room.on(RoomEvent.TrackUnsubscribed, track => detachAudioTrack(track));
+  // LiveKit tracks whether the browser will let it play audio; mirror that so
+  // the bubble can offer an unlock button (and drop it once playback starts).
+  room.on(RoomEvent.AudioPlaybackStatusChanged, () => {
+    if (room !== lkRoom) return;
+    isAudioBlocked.value = !lkRoom.canPlaybackAudio;
+  });
   // A remote disconnect (call ended, token expired, agent kicked) has to land
   // back on the same teardown as an explicit leave, or the bubble stays stuck
   // showing "leave".
@@ -116,6 +139,17 @@ const connectToRoom = async credentials => {
 
   await room.connect(credentials.serverUrl, credentials.token);
   await room.localParticipant.setMicrophoneEnabled(true);
+
+  // Try to unlock playback now; without a live user gesture this may reject,
+  // in which case canPlaybackAudio stays false and the bubble asks for a tap.
+  try {
+    await lkRoom.startAudio();
+  } catch (_) {
+    /* noop — reflected through canPlaybackAudio below */
+  }
+  // The room may have dropped while startAudio() was pending; don't resurrect
+  // the flag on a session that has already been torn down.
+  if (room === lkRoom) isAudioBlocked.value = !lkRoom.canPlaybackAudio;
 };
 
 export function usePathorsCallSession() {
@@ -187,6 +221,31 @@ export function usePathorsCallSession() {
     }
   };
 
+  /**
+   * Unlocks room audio after the browser's autoplay policy blocked it. Must be
+   * called from a user gesture (the bubble's "enable audio" click).
+   * @returns {Promise<void>}
+   */
+  const enableAudio = async () => {
+    const activeRoom = room;
+    if (!activeRoom) return;
+    try {
+      await activeRoom.startAudio();
+      await Promise.all(
+        attachedElements.map(el =>
+          Promise.resolve(el.play?.()).catch(() => {
+            /* noop — one stubborn element shouldn't block the rest */
+          })
+        )
+      );
+      isAudioBlocked.value = !activeRoom.canPlaybackAudio;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[pathors-call] could not enable audio', err);
+      isAudioBlocked.value = true;
+    }
+  };
+
   const isActiveCall = callId =>
     activeCallId.value != null && String(activeCallId.value) === String(callId);
 
@@ -195,6 +254,8 @@ export function usePathorsCallSession() {
     // Alias kept for call sites that read better as a verb+noun.
     joinCall: join,
     leave,
+    enableAudio,
+    isAudioBlocked: readonly(isAudioBlocked),
     isJoining: readonly(isJoining),
     isJoined: readonly(isJoined),
     error: readonly(error),

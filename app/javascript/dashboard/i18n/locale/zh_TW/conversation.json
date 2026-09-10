@@ -100,6 +100,7 @@
       "JOIN_CALL_ENDED": "通話已結束",
       "JOIN_MIC_DENIED": "需要麥克風權限才能加入通話",
       "JOIN_FAILED": "無法加入通話",
+      "ENABLE_AUDIO": "點此開啟通話聲音",
       "CALL_BACK": "Call back",
       "TRANSCRIPT_SHOW_MORE": "Show more",
       "TRANSCRIPT_SHOW_LESS": "Show less"
