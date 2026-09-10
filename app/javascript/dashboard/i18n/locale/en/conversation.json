@@ -116,6 +116,7 @@
       "JOIN_CALL_ENDED": "This call has already ended",
       "JOIN_MIC_DENIED": "Microphone access is required to join the call",
       "JOIN_FAILED": "Could not join the call",
+      "ENABLE_AUDIO": "Tap to hear the call",
       "CALL_BACK": "Call back",
       "TRANSCRIPT_SHOW_MORE": "Show more",
       "TRANSCRIPT_SHOW_LESS": "Show less"

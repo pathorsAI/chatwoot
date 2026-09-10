@@ -81,6 +81,8 @@ const {
   error: pathorsCallError,
   durationSeconds: pathorsCallDuration,
   isActiveCall: isActivePathorsCall,
+  isAudioBlocked: isPathorsAudioBlocked,
+  enableAudio: enablePathorsAudio,
 } = usePathorsCallSession();
 const { accountId } = useAccount();
 const callsStore = useCallsStore();
@@ -448,18 +450,30 @@ const handleCallBack = async () => {
         :disabled="isJoiningPathorsCall"
         @click="handlePathorsJoin"
       />
-      <div v-else-if="isInThisPathorsCall" class="flex gap-2 items-center">
+      <div v-else-if="isInThisPathorsCall" class="flex flex-col gap-2">
+        <!-- Browser autoplay blocked the caller's audio; this click unlocks it -->
         <NextButton
+          v-if="isPathorsAudioBlocked"
           type="button"
-          :label="$t('CONVERSATION.VOICE_CALL.LEAVE_CALL')"
-          icon="i-ph-phone-x-bold"
-          ruby
-          class="flex-1 !rounded-full"
-          @click="handlePathorsLeave"
+          :label="$t('CONVERSATION.VOICE_CALL.ENABLE_AUDIO')"
+          icon="i-ph-speaker-high-bold"
+          teal
+          class="!rounded-full"
+          @click="enablePathorsAudio"
         />
-        <span class="font-mono text-sm tabular-nums opacity-75">
-          {{ pathorsCallDurationLabel }}
-        </span>
+        <div class="flex gap-2 items-center">
+          <NextButton
+            type="button"
+            :label="$t('CONVERSATION.VOICE_CALL.LEAVE_CALL')"
+            icon="i-ph-phone-x-bold"
+            ruby
+            class="flex-1 !rounded-full"
+            @click="handlePathorsLeave"
+          />
+          <span class="font-mono text-sm tabular-nums opacity-75">
+            {{ pathorsCallDurationLabel }}
+          </span>
+        </div>
       </div>
     </div>
   </BaseBubble>

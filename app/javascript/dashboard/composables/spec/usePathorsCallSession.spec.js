@@ -13,6 +13,7 @@ const ROOM_EVENT = {
   TrackSubscribed: 'trackSubscribed',
   TrackUnsubscribed: 'trackUnsubscribed',
   Disconnected: 'disconnected',
+  AudioPlaybackStatusChanged: 'audioPlaybackChanged',
 };
 
 // Hoisted so the vi.mock factory below (which runs before the module body) can
@@ -20,13 +21,21 @@ const ROOM_EVENT = {
 const { FakeRoom, rooms, micState } = vi.hoisted(() => {
   const registry = [];
   // Set by a test to make the next room's microphone request reject.
-  const state = { nextError: null };
+  const state = { nextError: null, nextAudioBlocked: false };
 
   class Room {
     constructor() {
       this.handlers = {};
       this.connect = vi.fn().mockResolvedValue(undefined);
       this.disconnect = vi.fn().mockResolvedValue(undefined);
+      // Playback allowed by default; tests flip it to simulate autoplay blocks.
+      // Set by a test to make the next room behave as if autoplay is refused.
+      const audioBlocked = state.nextAudioBlocked;
+      state.nextAudioBlocked = false;
+      this.canPlaybackAudio = !audioBlocked;
+      this.startAudio = audioBlocked
+        ? vi.fn().mockRejectedValue(new Error('NotAllowedError'))
+        : vi.fn().mockResolvedValue(undefined);
       const micError = state.nextError;
       state.nextError = null;
       this.localParticipant = {
@@ -56,6 +65,7 @@ vi.mock('livekit-client', () => ({
     TrackSubscribed: 'trackSubscribed',
     TrackUnsubscribed: 'trackUnsubscribed',
     Disconnected: 'disconnected',
+    AudioPlaybackStatusChanged: 'audioPlaybackChanged',
   },
 }));
 
@@ -77,6 +87,7 @@ describe('usePathorsCallSession', () => {
   beforeEach(() => {
     rooms.length = 0;
     micState.nextError = null;
+    micState.nextAudioBlocked = false;
     vi.clearAllMocks();
     resetPathorsCallSession();
   });
@@ -216,5 +227,121 @@ describe('usePathorsCallSession', () => {
     expect(error.value).toBe(PATHORS_JOIN_ERROR.MEDIA_DENIED);
     expect(isJoined.value).toBe(false);
     expect(rooms[0].disconnect).toHaveBeenCalled();
+  });
+
+  describe('audio playback unlock', () => {
+    const joinCall = async () => {
+      PathorsCallsAPI.join.mockResolvedValue(credentials);
+      const session = usePathorsCallSession();
+      await session.join({ accountId: 3, callId: 42 });
+      return session;
+    };
+
+    const audioTrack = element => ({
+      kind: 'audio',
+      attach: () => element,
+      detach: () => [element],
+    });
+
+    beforeEach(() => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    it('tries to start room audio right after connecting', async () => {
+      const { isAudioBlocked } = await joinCall();
+
+      expect(rooms[0].startAudio).toHaveBeenCalled();
+      expect(isAudioBlocked.value).toBe(false);
+    });
+
+    it('flags audio as blocked when startAudio rejects without a gesture', async () => {
+      micState.nextAudioBlocked = true;
+      const { isAudioBlocked, isJoined } = await joinCall();
+
+      expect(rooms[0].startAudio).toHaveBeenCalled();
+      expect(isJoined.value).toBe(true);
+      expect(isAudioBlocked.value).toBe(true);
+    });
+
+    it('mirrors AudioPlaybackStatusChanged into isAudioBlocked', async () => {
+      const { isAudioBlocked } = await joinCall();
+
+      rooms[0].canPlaybackAudio = false;
+      rooms[0].emit(ROOM_EVENT.AudioPlaybackStatusChanged, false);
+      expect(isAudioBlocked.value).toBe(true);
+
+      rooms[0].canPlaybackAudio = true;
+      rooms[0].emit(ROOM_EVENT.AudioPlaybackStatusChanged, true);
+      expect(isAudioBlocked.value).toBe(false);
+    });
+
+    it('flags audio as blocked when an attached track cannot play', async () => {
+      const { isAudioBlocked } = await joinCall();
+      const element = document.createElement('audio');
+      element.play = vi
+        .fn()
+        .mockRejectedValue(
+          Object.assign(new Error('blocked'), { name: 'NotAllowedError' })
+        );
+
+      expect(() =>
+        rooms[0].emit(ROOM_EVENT.TrackSubscribed, audioTrack(element))
+      ).not.toThrow();
+      await vi.waitFor(() => expect(isAudioBlocked.value).toBe(true));
+    });
+
+    it('enableAudio starts room audio, replays elements and clears the flag', async () => {
+      const { isAudioBlocked, enableAudio } = await joinCall();
+      const element = document.createElement('audio');
+      element.play = vi.fn().mockRejectedValueOnce(new Error('blocked'));
+      rooms[0].canPlaybackAudio = false;
+      rooms[0].emit(ROOM_EVENT.TrackSubscribed, audioTrack(element));
+      await vi.waitFor(() => expect(isAudioBlocked.value).toBe(true));
+
+      rooms[0].startAudio.mockImplementation(async () => {
+        rooms[0].canPlaybackAudio = true;
+      });
+      element.play.mockResolvedValue(undefined);
+      await enableAudio();
+
+      expect(rooms[0].startAudio).toHaveBeenCalledTimes(2);
+      expect(element.play).toHaveBeenCalledTimes(2);
+      expect(isAudioBlocked.value).toBe(false);
+    });
+
+    it('keeps the flag set when enableAudio fails', async () => {
+      const { isAudioBlocked, enableAudio } = await joinCall();
+      rooms[0].canPlaybackAudio = false;
+      rooms[0].emit(ROOM_EVENT.AudioPlaybackStatusChanged, false);
+      rooms[0].startAudio.mockRejectedValue(new Error('still blocked'));
+
+      await expect(enableAudio()).resolves.toBeUndefined();
+      expect(isAudioBlocked.value).toBe(true);
+    });
+
+    it('is a no-op when not in a call', async () => {
+      const { enableAudio, isAudioBlocked } = usePathorsCallSession();
+
+      await expect(enableAudio()).resolves.toBeUndefined();
+      expect(isAudioBlocked.value).toBe(false);
+    });
+
+    it('clears the flag on leave and on a remote disconnect', async () => {
+      const first = await joinCall();
+      rooms[0].canPlaybackAudio = false;
+      rooms[0].emit(ROOM_EVENT.AudioPlaybackStatusChanged, false);
+      expect(first.isAudioBlocked.value).toBe(true);
+
+      await first.leave();
+      expect(first.isAudioBlocked.value).toBe(false);
+
+      const second = await joinCall();
+      rooms[1].canPlaybackAudio = false;
+      rooms[1].emit(ROOM_EVENT.AudioPlaybackStatusChanged, false);
+      expect(second.isAudioBlocked.value).toBe(true);
+
+      rooms[1].emit(ROOM_EVENT.Disconnected);
+      expect(second.isAudioBlocked.value).toBe(false);
+    });
   });
 });
