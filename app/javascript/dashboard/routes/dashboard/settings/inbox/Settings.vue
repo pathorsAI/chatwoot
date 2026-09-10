@@ -17,6 +17,7 @@ import TiktokReauthorize from './channels/tiktok/Reauthorize.vue';
 import DuplicateInboxBanner from './channels/instagram/DuplicateInboxBanner.vue';
 import MicrosoftReauthorize from './channels/microsoft/Reauthorize.vue';
 import GoogleReauthorize from './channels/google/Reauthorize.vue';
+import InboxReconnectionRequired from './components/InboxReconnectionRequired.vue';
 import WhatsappReauthorize from './channels/whatsapp/Reauthorize.vue';
 import InboxHealthAPI from 'dashboard/api/inboxHealth';
 import PreChatFormSettings from './PreChatForm/Settings.vue';
@@ -69,6 +70,7 @@ export default {
     LockToSingleConversationPreview,
     MicrosoftReauthorize,
     GoogleReauthorize,
+    InboxReconnectionRequired,
     NextButton,
     SpinnerLoader,
     InstagramReauthorize,
@@ -381,13 +383,24 @@ export default {
       return this.isAFacebookInbox && this.inbox.reauthorization_required;
     },
     googleUnauthorized() {
-      const isLegacyInbox = ['imap.gmail.com', 'imap.google.com'].includes(
-        this.inbox.imap_address
-      );
+      // A password-based Gmail inbox can only be reconnected through OAuth when this
+      // installation has a Google OAuth client; otherwise the generic email banner applies.
+      const isLegacyInbox =
+        ['imap.gmail.com', 'imap.google.com'].includes(
+          this.inbox.imap_address
+        ) && !!window.chatwootConfig?.googleOAuthClientId;
 
       return (
         (this.isAGoogleInbox || isLegacyInbox) &&
         this.inbox.reauthorization_required
+      );
+    },
+    emailUnauthorized() {
+      return (
+        this.isAnEmailChannel &&
+        this.inbox.reauthorization_required &&
+        !this.microsoftUnauthorized &&
+        !this.googleUnauthorized
       );
     },
     isEmbeddedSignupWhatsApp() {
@@ -608,7 +621,7 @@ export default {
         this.isLoadingHealth = false;
       }
     },
-    goToWhatsAppConfiguration() {
+    goToConfiguration() {
       const configurationTabIndex = this.tabs.findIndex(
         tab => tab.key === 'configuration'
       );
@@ -818,6 +831,14 @@ export default {
           :inbox="inbox"
           class="mb-4"
           :class="bannerMaxWidth"
+        />
+        <InboxReconnectionRequired
+          v-if="emailUnauthorized"
+          class="mx-6 mb-4"
+          :class="bannerMaxWidth"
+          :description="$t('INBOX_MGMT.EMAIL_RECONNECTION_REQUIRED')"
+          :action-label="$t('INBOX_MGMT.OPEN_CONFIGURATION')"
+          @reauthorize="goToConfiguration"
         />
         <InstagramReauthorize
           v-if="instagramUnauthorized"
@@ -1450,7 +1471,7 @@ export default {
             :is-embedded-signup="isEmbeddedSignupWhatsApp"
             :is-registering-webhook="isRegisteringWebhook"
             @register-webhook="registerWebhook"
-            @go-to-configuration="goToWhatsAppConfiguration"
+            @go-to-configuration="goToConfiguration"
           />
         </div>
         <WhatsappManualMigrationDialog

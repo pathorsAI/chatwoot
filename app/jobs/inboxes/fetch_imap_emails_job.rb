@@ -73,8 +73,8 @@ class Inboxes::FetchImapEmailsJob < MutexApplicationJob
 
     Rails.logger.info "[IMAP::FETCH_EMAIL_SERVICE] Finished processing fetched emails for inbox #{channel.inbox.id}"
     true
-  rescue OAuth2::Error => e
-    Rails.logger.error "[IMAP::FETCH_EMAIL_SERVICE] OAuth error for inbox #{channel.inbox.id} : #{e.message}"
+  rescue OAuth2::Error, CustomExceptions::Inbox::ImapAuthenticationError => e
+    Rails.logger.error "[IMAP::FETCH_EMAIL_SERVICE] Authorization error for inbox #{channel.inbox.id} : #{e.message}"
     channel.authorization_error!
     false
   end

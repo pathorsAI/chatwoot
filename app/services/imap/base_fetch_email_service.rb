@@ -138,11 +138,20 @@ class Imap::BaseFetchEmailService
 
   def build_imap_client
     imap = Net::IMAP.new(channel.imap_address, port: channel.imap_port, ssl: channel.imap_enable_ssl)
-    Imap::Authentication.authenticate!(imap, authentication_type, channel.imap_login, imap_password)
+    authenticate_imap_client(imap)
 
     imap.select('INBOX')
     Rails.logger.info "[IMAP::FETCH_EMAIL_SERVICE] IMAP connection established for #{channel.email}"
     imap
+  end
+
+  # Only a NO response to the authentication step is a credential failure; a NO on a later
+  # command (SELECT, SEARCH, FETCH) must not be counted against the channel's authorization.
+  def authenticate_imap_client(imap)
+    Imap::Authentication.authenticate!(imap, authentication_type, channel.imap_login, imap_password)
+  rescue Net::IMAP::NoResponseError => e
+    imap.disconnect
+    raise CustomExceptions::Inbox::ImapAuthenticationError.new(message: e.message)
   end
 
   def terminate_imap_connection
