@@ -57,13 +57,7 @@ class Inboxes::FetchImapEmailsJob < MutexApplicationJob
   end
 
   def process_email_for_channel(channel, interval)
-    inbound_emails = if channel.microsoft?
-                       Imap::MicrosoftFetchEmailService.new(channel: channel, interval: interval).perform
-                     elsif channel.google?
-                       Imap::GoogleFetchEmailService.new(channel: channel, interval: interval).perform
-                     else
-                       Imap::FetchEmailService.new(channel: channel, interval: interval).perform
-                     end
+    inbound_emails = fetch_service_for(channel, interval).perform
 
     # The mailbox accepted the credentials, so earlier rejections were transient.
     channel.reset_authorization_errors!
@@ -79,6 +73,17 @@ class Inboxes::FetchImapEmailsJob < MutexApplicationJob
     Rails.logger.error "[IMAP::FETCH_EMAIL_SERVICE] Authorization error for inbox #{channel.inbox.id} : #{e.message}"
     channel.authorization_error!
     false
+  end
+
+  def fetch_service_for(channel, interval)
+    service_class = if channel.microsoft?
+                      Imap::MicrosoftFetchEmailService
+                    elsif channel.google?
+                      Imap::GoogleFetchEmailService
+                    else
+                      Imap::FetchEmailService
+                    end
+    service_class.new(channel: channel, interval: interval)
   end
 
   def should_skip_email?(message_id)
