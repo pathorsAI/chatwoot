@@ -65,6 +65,8 @@ class Inboxes::FetchImapEmailsJob < MutexApplicationJob
                        Imap::FetchEmailService.new(channel: channel, interval: interval).perform
                      end
 
+    # The mailbox accepted the credentials, so earlier rejections were transient.
+    channel.reset_authorization_errors!
     Rails.logger.info "[IMAP::FETCH_EMAIL_SERVICE] Fetched #{inbound_emails.length} new emails for inbox #{channel.inbox.id}"
 
     inbound_emails.each do |inbound_mail|
