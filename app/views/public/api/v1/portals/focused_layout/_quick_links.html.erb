@@ -1,14 +1,14 @@
-<%# locals: (portal:) %>
+<%# locals: (portal:, locale: nil) %>
 <%
   links = [
     {
-      href: new_public_portal_ticket_path(portal.slug),
+      href: portal_ticket_link(portal, '/new', locale),
       icon: 'i-lucide-plus',
       title: I18n.t('public_portal.tickets.nav.submit_a_ticket'),
       description: I18n.t('public_portal.focused.quick_submit_description')
     },
     {
-      href: public_portal_ticket_access_path(portal.slug),
+      href: portal_ticket_link(portal, '/access', locale),
       icon: 'i-lucide-list',
       title: I18n.t('public_portal.tickets.nav.my_tickets'),
       description: I18n.t('public_portal.focused.quick_mine_description')
