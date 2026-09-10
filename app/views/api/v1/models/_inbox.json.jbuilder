@@ -98,8 +98,13 @@ if resource.email?
     json.imap_enable_ssl resource.channel.try(:imap_enable_ssl)
     json.imap_authentication resource.channel.try(:imap_authentication)
 
-    if resource.channel.try(:microsoft?) || resource.channel.try(:google?) || resource.channel.try(:legacy_google?)
+    # OAuth channels cannot work without a token, so an empty provider_config also counts as
+    # needing reauthorization. Password-based channels (including Gmail over IMAP with an app
+    # password) only need it once the fetch pipeline has actually recorded authorization errors.
+    if resource.channel.try(:microsoft?) || resource.channel.try(:google?)
       json.reauthorization_required resource.channel.try(:provider_config).empty? || resource.channel.try(:reauthorization_required?)
+    else
+      json.reauthorization_required resource.channel.try(:reauthorization_required?)
     end
   end
 
