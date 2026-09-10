@@ -139,6 +139,47 @@ RSpec.describe Public::Api::V1::PortalsController, type: :request do
       expect(response.body).to include('id="portal-bg"')
     end
 
+    # The focused home has three separate ticket entry points (nav, hero action cards,
+    # quick links) and each one was added by a different change. Rather than pin each
+    # href, assert the invariant: nothing on this page may link into the ticket flow
+    # without carrying the locale, or that entry point silently drops the visitor back
+    # to the portal default. The action cards shipped doing exactly that.
+    context 'when a focused portal is viewed in a non-default locale' do
+      let!(:web_widget) { create(:channel_widget, account: account) }
+
+      before do
+        account.enable_features!('tickets')
+        portal.update!(channel_web_widget: web_widget,
+                       config: { allowed_locales: %w[en es], default_locale: 'en', layout: 'focused' })
+      end
+
+      it 'carries the locale on every ticket link on the page' do
+        get "/hc/#{portal.slug}/es"
+
+        expect(response).to have_http_status(:success)
+
+        ticket_links = Nokogiri::HTML(response.body)
+                               .css("a[href*='/hc/#{portal.slug}/tickets']")
+                               .map { |link| link['href'] }
+
+        expect(ticket_links).not_to be_empty
+        expect(ticket_links).to all(include('locale=es'))
+      end
+
+      it 'reaches the action cards, which is where they were being dropped' do
+        portal.articles.destroy_all
+
+        get "/hc/#{portal.slug}/es"
+
+        document = Nokogiri::HTML(response.body)
+
+        expect(document.at_css("a[data-testid='focused-action-submit']")['href'])
+          .to eq("/hc/#{portal.slug}/tickets/new?locale=es")
+        expect(document.at_css("a[data-testid='focused-action-mine']")['href'])
+          .to eq("/hc/#{portal.slug}/tickets/access?locale=es")
+      end
+    end
+
     context 'when the focused portal has no published articles' do
       let!(:web_widget) { create(:channel_widget, account: account) }
 
