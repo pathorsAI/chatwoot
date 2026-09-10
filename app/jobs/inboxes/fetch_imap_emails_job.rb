@@ -57,14 +57,10 @@ class Inboxes::FetchImapEmailsJob < MutexApplicationJob
   end
 
   def process_email_for_channel(channel, interval)
-    inbound_emails = if channel.microsoft?
-                       Imap::MicrosoftFetchEmailService.new(channel: channel, interval: interval).perform
-                     elsif channel.google?
-                       Imap::GoogleFetchEmailService.new(channel: channel, interval: interval).perform
-                     else
-                       Imap::FetchEmailService.new(channel: channel, interval: interval).perform
-                     end
+    inbound_emails = fetch_service_for(channel, interval).perform
 
+    # The mailbox accepted the credentials, so earlier rejections were transient.
+    channel.reset_authorization_errors!
     Rails.logger.info "[IMAP::FETCH_EMAIL_SERVICE] Fetched #{inbound_emails.length} new emails for inbox #{channel.inbox.id}"
 
     inbound_emails.each do |inbound_mail|
@@ -73,10 +69,21 @@ class Inboxes::FetchImapEmailsJob < MutexApplicationJob
 
     Rails.logger.info "[IMAP::FETCH_EMAIL_SERVICE] Finished processing fetched emails for inbox #{channel.inbox.id}"
     true
-  rescue OAuth2::Error => e
-    Rails.logger.error "[IMAP::FETCH_EMAIL_SERVICE] OAuth error for inbox #{channel.inbox.id} : #{e.message}"
+  rescue OAuth2::Error, CustomExceptions::Inbox::ImapAuthenticationError => e
+    Rails.logger.error "[IMAP::FETCH_EMAIL_SERVICE] Authorization error for inbox #{channel.inbox.id} : #{e.message}"
     channel.authorization_error!
     false
+  end
+
+  def fetch_service_for(channel, interval)
+    service_class = if channel.microsoft?
+                      Imap::MicrosoftFetchEmailService
+                    elsif channel.google?
+                      Imap::GoogleFetchEmailService
+                    else
+                      Imap::FetchEmailService
+                    end
+    service_class.new(channel: channel, interval: interval)
   end
 
   def should_skip_email?(message_id)

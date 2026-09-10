@@ -34,6 +34,12 @@ module Reauthorizable
     prompt_reauthorization! if authorization_error_count >= self.class::AUTHORIZATION_ERROR_THRESHOLD
   end
 
+  # call this after a successful authorization so the threshold above counts consecutive
+  # failures instead of every failure the object has ever seen
+  def reset_authorization_errors!
+    ::Redis::Alfred.delete(authorization_error_count_key)
+  end
+
   # Performed automatically if error threshold is breached
   # could used to manually prompt reauthorization if auth scope changes
   def prompt_reauthorization!
