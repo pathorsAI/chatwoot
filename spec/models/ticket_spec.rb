@@ -62,7 +62,7 @@ RSpec.describe Ticket do
     end
 
     it 'is in_progress when the conversation is handled by an agent bot' do
-      conversation.update!(assignee_agent_bot: create(:agent_bot, account: account))
+      conversation.update!(ai_assignee: create(:agent_bot, account: account))
 
       expect(ticket.reload.status_category).to eq('in_progress')
     end

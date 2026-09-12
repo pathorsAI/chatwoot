@@ -264,7 +264,8 @@
     "EMAIL_VERIFICATION_SENT": "驗證信件已發送，請檢查您的收件匣。",
     "ACCOUNT_SUSPENDED": {
       "TITLE": "帳戶已停權",
-      "MESSAGE": "您的帳戶已被停權。如需更多資訊，請聯繫客服團隊。"
+      "MESSAGE": "您的帳戶已被停權。如需更多資訊，請聯繫客服團隊。",
+      "MANAGE_BILLING": "Manage billing"
     },
     "NO_ACCOUNTS": {
       "TITLE": "找不到帳戶",
@@ -324,7 +325,7 @@
     "COMPANIES": "公司",
     "ALL_COMPANIES": "所有公司",
     "CAPTAIN": "Captain",
-    "TICKETS": "工單",
+    "CALLS": "通話",
     "CAPTAIN_ASSISTANTS": "助理",
     "CAPTAIN_OVERVIEW": "總覽",
     "CAPTAIN_DOCUMENTS": "文件",
@@ -339,6 +340,7 @@
     "AGENT_BOTS": "機器人",
     "AUDIT_LOGS": "稽核日誌",
     "INBOXES": "收件匣",
+    "WHATSAPP_TEMPLATES": "訊息範本",
     "NOTIFICATIONS": "通知",
     "CANNED_RESPONSES": "預設回覆",
     "INTEGRATIONS": "整合",
@@ -365,9 +367,6 @@
     "SMS": "SMS",
     "WHATSAPP": "WhatsApp",
     "CAMPAIGNS": "行銷活動",
-    "CAMPAIGN_BROADCAST": "群發",
-    "CAMPAIGN_PROACTIVE": "主動觸發",
-    "CAMPAIGN_TEMPLATES": "模板",
     "ONGOING": "進行中",
     "ONE_OFF": "一次性",
     "REPORTS_SLA": "SLA",
@@ -416,6 +415,10 @@
     "SECURITY": "安全性",
     "CAPTAIN_AI": "Captain",
     "CONVERSATION_WORKFLOW": "對話工作流程",
+    "TICKETS": "工單",
+    "CAMPAIGN_BROADCAST": "群發",
+    "CAMPAIGN_PROACTIVE": "主動觸發",
+    "CAMPAIGN_TEMPLATES": "模板",
     "BACK_TO_MAIN": "返回主選單",
     "SECTIONS": {
       "WORK": "日常工作",
@@ -439,8 +442,6 @@
       "OVERDUE": "逾期"
     },
     "PEOPLE": "人員與團隊",
-    "CALLS": "通話",
-    "WHATSAPP_TEMPLATES": "訊息範本",
     "SENDER_LISTS": "寄件者名單"
   },
   "DATA_IMPORTS": {
@@ -448,6 +449,10 @@
     "DESCRIPTION": "Bring your existing contacts and past conversations into this account from another support tool. Each import runs in the background, so you can keep working while it finishes, track its progress, and review anything that was skipped along the way.",
     "LOADING": "Fetching imports",
     "DEFAULT_IMPORT_NAME": "Intercom import",
+    "DEFAULT_IMPORT_NAMES": {
+      "INTERCOM": "Intercom import",
+      "FRESHDESK": "Freshdesk import"
+    },
     "TABS": {
       "IMPORT": "匯入",
       "EXPORT": "匯出"
@@ -461,9 +466,15 @@
       "TITLE": "New import",
       "SOURCE": "Source",
       "NAME": "Import name",
-      "NAME_PLACEHOLDER": "July Intercom migration",
+      "NAME_PLACEHOLDER": "July support migration",
       "ACCESS_KEY": "Intercom access key",
       "ACCESS_KEY_PLACEHOLDER": "Paste your Intercom access key",
+      "INTERCOM_ACCESS_KEY": "Intercom access key",
+      "INTERCOM_ACCESS_KEY_PLACEHOLDER": "Paste your Intercom access key",
+      "FRESHDESK_API_KEY": "Freshdesk API key",
+      "FRESHDESK_API_KEY_PLACEHOLDER": "Paste your Freshdesk API key",
+      "FRESHDESK_DOMAIN": "Freshdesk domain",
+      "FRESHDESK_DOMAIN_PLACEHOLDER": "acme.freshdesk.com",
       "DATA_TYPES": "Data to import",
       "VALIDATING": "Validating access key...",
       "VALID_KEY": "Access key validated.",
@@ -491,6 +502,7 @@
       "STATUS": "狀態",
       "IMPORTED": "Imported",
       "CREATED": "建立時間",
+      "RETRY": "Retry",
       "ABANDON": "Abandon"
     },
     "DETAIL": {
@@ -536,9 +548,11 @@
       }
     },
     "ALERTS": {
-      "IMPORT_STARTED": "Intercom import has started.",
-      "IMPORT_ABANDONED": "Intercom import has been abandoned.",
-      "IMPORT_FAILED": "Could not start the Intercom import."
+      "IMPORT_STARTED": "Import has started.",
+      "IMPORT_RETRIED": "Import has been queued to resume.",
+      "IMPORT_RETRY_FAILED": "Could not retry the import.",
+      "IMPORT_ABANDONED": "Import has been abandoned.",
+      "IMPORT_FAILED": "Could not start the import."
     }
   },
   "CAPTAIN_SETTINGS": {
