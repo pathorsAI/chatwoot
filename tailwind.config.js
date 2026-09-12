@@ -39,6 +39,13 @@ const tailwindConfig = {
   ],
   theme: {
     extend: {
+      transitionDuration: {
+        fast: '150ms',
+        base: '220ms',
+      },
+      transitionTimingFunction: {
+        'out-soft': 'cubic-bezier(0.2, 0, 0, 1)',
+      },
       fontFamily: {
         sans: defaultSansFonts,
         inter: ['Inter', ...defaultSansFonts],
@@ -265,6 +272,8 @@ const tailwindConfig = {
   plugins: [
     // eslint-disable-next-line
     require('@tailwindcss/typography'),
+    // eslint-disable-next-line
+    require('tailwindcss-animate'),
     iconsPlugin({
       collections: {
         woot: { icons },
