@@ -160,11 +160,16 @@ defineExpose({ show, hide, toggle });
     >
       <div
         ref="mobileContentRef"
-        v-on-click-outside="[handleClickOutside, { ignore: clickOutsideIgnore }]"
+        v-on-click-outside="[
+          handleClickOutside,
+          { ignore: clickOutsideIgnore },
+        ]"
         data-popover-content
         class="relative flex flex-col w-full max-w-lg max-h-[calc(100vh-4rem)] mx-4 bg-n-alpha-3 backdrop-blur-[100px] shadow-xl rounded-xl duration-fast ease-out-soft animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none"
       >
-        <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain rounded-xl">
+        <div
+          class="flex-1 min-h-0 overflow-y-auto overscroll-contain rounded-xl"
+        >
           <slot name="content" :hide="hide" />
         </div>
       </div>
