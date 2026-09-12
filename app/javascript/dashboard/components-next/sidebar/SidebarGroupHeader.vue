@@ -85,7 +85,8 @@ const count = computed(() =>
     <button
       v-if="expandable"
       type="button"
-      class="grid flex-shrink-0 place-content-center rounded size-4 text-n-slate-11 hover:bg-n-alpha-2"
+      class="grid flex-shrink-0 place-content-center rounded size-4 text-n-slate-11 hover:bg-n-alpha-2 disabled:hover:bg-transparent disabled:cursor-default"
+      :disabled="hasActiveChild"
       :aria-expanded="isExpanded"
       :aria-label="t('SIDEBAR.TOGGLE_GROUP', { label })"
       @click.stop.prevent="emit('toggle')"
