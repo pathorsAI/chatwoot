@@ -1,5 +1,14 @@
 {
   "CAMPAIGN": {
+    "CONFIRM_DELETE": {
+      "TITLE": "Are you sure to delete?",
+      "DESCRIPTION": "The delete action is permanent and cannot be reversed.",
+      "CONFIRM": "Delete",
+      "API": {
+        "SUCCESS_MESSAGE": "Campaign deleted successfully",
+        "ERROR_MESSAGE": "There was an error. Please try again."
+      }
+    },
     "CHANNEL": {
       "SMS": "SMS",
       "WHATSAPP": "WhatsApp"
@@ -271,15 +280,6 @@
           "UPDATE_SUCCESS_MESSAGE": "Template updated successfully",
           "ERROR_MESSAGE": "There was an error. Please try again."
         }
-      }
-    },
-    "CONFIRM_DELETE": {
-      "TITLE": "Are you sure to delete?",
-      "DESCRIPTION": "The delete action is permanent and cannot be reversed.",
-      "CONFIRM": "Delete",
-      "API": {
-        "SUCCESS_MESSAGE": "Campaign deleted successfully",
-        "ERROR_MESSAGE": "There was an error. Please try again."
       }
     }
   }

@@ -3,7 +3,10 @@ require 'rails_helper'
 RSpec.describe 'Integration Apps API', type: :request do
   let(:account) { create(:account) }
 
-  before { allow(Integrations::Openai::KeyValidator).to receive(:valid?).and_return(true) }
+  before do
+    allow(Integrations::Openai::KeyValidator).to receive(:valid?).and_return(true)
+    allow(GlobalConfigService).to receive(:load).and_call_original
+  end
 
   describe 'GET /api/v1/integrations/apps' do
     context 'when it is an unauthenticated user' do
@@ -99,6 +102,20 @@ RSpec.describe 'Integration Apps API', type: :request do
         expect(app['hooks'].first['settings']).not_to be_nil
       end
 
+      it 'omits Shopify when the installation switch is disabled' do
+        account.enable_features('shopify_integration')
+        allow(GlobalConfigService).to receive(:load)
+          .with('ENABLE_SHOPIFY_INTEGRATION', 'false')
+          .and_return(false)
+
+        get api_v1_account_integrations_apps_url(account),
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        shopify_app = response.parsed_body['payload'].find { |app| app['id'] == 'shopify' }
+        expect(shopify_app).to be_nil
+      end
+
       it 'keeps slack channel display settings while redacting unspecified settings' do
         create(:integrations_hook, account: account, settings: { channel_name: 'support', signing_secret: 'secret' })
         allow(GlobalConfigService).to receive(:load).and_call_original
@@ -135,6 +152,22 @@ RSpec.describe 'Integration Apps API', type: :request do
         app = response.parsed_body
         expect(app['id']).to eql('slack')
         expect(app['name']).to eql('Slack')
+      end
+
+      it 'returns not found for Shopify when the client ID is missing' do
+        account.enable_features('shopify_integration')
+        allow(GlobalConfigService).to receive(:load)
+          .with('ENABLE_SHOPIFY_INTEGRATION', 'false')
+          .and_return(true)
+        allow(GlobalConfigService).to receive(:load)
+          .with('SHOPIFY_CLIENT_ID', nil)
+          .and_return(nil)
+
+        get api_v1_account_integrations_app_url(account_id: account.id, id: 'shopify'),
+            headers: agent.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:not_found)
       end
 
       it 'will not return sensitive information for openai app for agents' do
@@ -206,6 +239,19 @@ RSpec.describe 'Integration Apps API', type: :request do
           'endpoint_url' => 'https://api.leadsquared.com/',
           'enable_conversation_activity' => true
         )
+      end
+
+      it 'returns not found for Shopify when either feature gate is disabled' do
+        account.enable_features('shopify_integration')
+        allow(GlobalConfigService).to receive(:load)
+          .with('ENABLE_SHOPIFY_INTEGRATION', 'false')
+          .and_return(false)
+
+        get api_v1_account_integrations_app_url(account_id: account.id, id: 'shopify'),
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:not_found)
       end
     end
   end

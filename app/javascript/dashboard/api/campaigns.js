@@ -1,4 +1,5 @@
 /* global axios */
+
 import ApiClient from './ApiClient';
 
 class CampaignsAPI extends ApiClient {

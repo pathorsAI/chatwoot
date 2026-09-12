@@ -64,6 +64,10 @@ class Integrations::App
       build_linear_action
     when 'pathors'
       build_pathors_action
+    when 'shopify'
+      return unless Shopify::FeatureGate.enabled?(account: Current.account)
+
+      GlobalConfigService.load('SHOPIFY_APP_STORE_URL', nil)
     else
       params[:action]
     end
@@ -117,6 +121,8 @@ class Integrations::App
       account.dashboard_apps.exists?
     when 'pathors'
       pathors_bot_connected?(account)
+    when 'shopify'
+      account.hooks.exists?(app_id: id, status: :enabled)
     else
       account.hooks.exists?(app_id: id)
     end
@@ -180,7 +186,8 @@ class Integrations::App
   private
 
   def shopify_enabled?(account)
-    account.feature_enabled?('shopify_integration') && GlobalConfigService.load('SHOPIFY_CLIENT_ID', nil).present?
+    Shopify::FeatureGate.enabled?(account: account) &&
+      GlobalConfigService.load('SHOPIFY_CLIENT_ID', nil).present?
   end
 
   def notion_enabled?(account)
