@@ -336,7 +336,9 @@ onUnmounted(() => {
       <div
         v-if="hasChildren"
         class="grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none"
-        :class="isOpen ? '[grid-template-rows:1fr]' : '[grid-template-rows:0fr]'"
+        :class="
+          isOpen ? '[grid-template-rows:1fr]' : '[grid-template-rows:0fr]'
+        "
       >
         <!-- Clipped children stay in the DOM for the animation, so they are
              taken out of the tab order while the group is folded. -->
